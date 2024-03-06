@@ -2,6 +2,7 @@ from collections import deque
 from typing import Protocol, Tuple, Union, runtime_checkable
 
 import numpy as np
+from river.utils.rolling import BaseRolling
 
 
 @runtime_checkable
@@ -53,7 +54,10 @@ class SubIDDriftDetector:
         Returns:
             Distance between the Hankel matrix and its transformation.
         """
-        _, W = self.subid.eig
+        if isinstance(self.subid, BaseRolling):
+            _, W = self.subid.obj.eig  # type: ignore
+        else:
+            _, W = self.subid.eig
         W = W.real
         D = np.sum((Y @ Y.T) - (Y @ W @ W.T @ Y.T))
         return D
