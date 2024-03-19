@@ -1,14 +1,15 @@
 from collections import deque
 
+import numpy as np
 import pandas as pd
-from river.base import DriftDetector, MiniBatchTransformer
+from river.base import DriftDetector, MiniBatchTransformer, Transformer
 from river.utils.rolling import BaseRolling
 
 
 class SubIDDriftDetector(DriftDetector):
     def __init__(
         self,
-        subid: MiniBatchTransformer | BaseRolling,
+        subid: MiniBatchTransformer | Transformer | BaseRolling,
         ref_size: int,
         test_size: int,
         threshold: float = 0.1,
@@ -58,22 +59,38 @@ class SubIDDriftDetector(DriftDetector):
         Returns:
             Distance between the Hankel matrix and its transformation.
         """
-        Y_p = self.subid.transform_many(Y)
-        D = ((Y @ Y.T) - (Y_p @ Y_p.T)).sum(axis=0).sum(axis=0)
-        return D
+        if isinstance(self.subid, MiniBatchTransformer):
+            Y_p = self.subid.transform_many(Y)
+        else:
+            Y_p = pd.DataFrame(
+                [
+                    self.subid.transform_one(x)
+                    for x in Y.to_dict(orient="records")
+                ]
+            )
+        YY = (Y**2).sum().sum()
+        # YY = np.linalg.norm(Y, 1)
+        YY_std = np.sqrt(YY)
+        YpYp = (Y_p**2).sum().sum()
+        # YpYp = np.linalg.norm(Y_p, 1)
+        YpYp_std = np.sqrt(YpYp)
+
+        D = YY / YY_std - YpYp / YpYp_std
+        return float(D)
 
     def update(self, x: dict) -> None:
         self._Y.append(x)
 
-        if len(self._Y) > self.time_lag + self.test_size:
+        ref_delay = self.time_lag + self.test_size
+        if len(self._Y) > ref_delay:
             if isinstance(self.subid, BaseRolling):
-                self.subid.update(self._Y[0])
+                self.subid.update(self._Y[-ref_delay - 1])
             else:
-                self.subid.learn_one(self._Y[0])
+                self.subid.learn_one(self._Y[-ref_delay - 1])
 
         if (
             self.n_seen >= self.grace_period
-            and len(self._Y) >= self.ref_size + self.time_lag + self.test_size
+            and len(self._Y) >= self.ref_size + ref_delay
         ):
             Y = pd.DataFrame(self._Y)
             D_train = (
@@ -86,9 +103,9 @@ class SubIDDriftDetector(DriftDetector):
             )
             # TODO: Figure out onder what circumstances the distance of train
             #  is higher than the distance of test (lower test noise?, running normalization, ...)
-            self.score = abs(D_test / D_train) - 1
-            # TODO: implement score shawing
-            # self.score = max(self.score, 0.0)
+            self.score = (D_test / D_train) - 1
+            # TODO: comment on score shawing
+            self.score = max(self.score, 0.0)
             self._drift_detected = self.score > self.threshold
         else:
             self.score = 0.0
