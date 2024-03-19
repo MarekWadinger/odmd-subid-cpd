@@ -79,8 +79,8 @@ class DMD:
         if r < self.m:
             u_, sigma, v = sp.sparse.linalg.svds(X, k=r)
         else:
-            u_, sigma, v = np.linalg.svd(X)
-        u_, sigma, v = u_[:, :r], sigma[:r], v[:r, :]
+            u_, sigma, v = np.linalg.svd(X, full_matrices=False)
+        # u_, sigma, v = u_[:, :r], sigma[:r], v[:r, :]
         sigma_inv = np.reciprocal(sigma)
         # Compute the low-rank approximation of Koopman matrix
         self.A_bar = u_.conj().T @ Y @ v.conj().T @ np.diag(sigma_inv)
