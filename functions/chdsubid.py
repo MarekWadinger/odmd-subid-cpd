@@ -39,7 +39,7 @@ class SubIDDriftDetector(DriftDetector):
         self._distances: tuple[float, float]
         self._drift_detected: bool
 
-        self._Y: deque[dict] = deque(
+        self._X: deque[dict] = deque(
             maxlen=self.ref_size + self.time_lag + self.test_size
         )
 
@@ -54,7 +54,7 @@ class SubIDDriftDetector(DriftDetector):
         """
         return False
 
-    def _compute_distance(self, Y: pd.DataFrame, Y_p: pd.DataFrame) -> float:
+    def _compute_distance(self, X: pd.DataFrame, X_p: pd.DataFrame) -> float:
         """Compute the distance between the Hankel matrix and its transformation.
 
         This formulation computes a measure of how much information in the dataset represented by Y is preserved or retained when projected onto the space spanned by W. The difference between the covariance matrix of Y and the projected version is computed, and the sum of all elements in this difference matrix gives an overall measure of dissimilarity or distortion.
@@ -65,59 +65,59 @@ class SubIDDriftDetector(DriftDetector):
         Returns:
             Distance between the Hankel matrix and its transformation.
         """
-        YY = (Y**2).sum().sum()
-        # YY = np.linalg.norm(Y, 1)
-        YY_std = np.sqrt(YY)
-        YpYp = (Y_p**2).sum().sum()
-        # YpYp = np.linalg.norm(Y_p, 1)
-        YpYp_std = np.sqrt(YpYp)
+        XX = (X**2).sum().sum()
+        # XX = np.linalg.norm(X, 1)
+        XX_std = np.sqrt(XX)
+        XpXp = (X_p**2).sum().sum()
+        # XpXp = np.linalg.norm(X_p, 1)
+        XpXp_std = np.sqrt(XpXp)
 
-        return YY / YY_std - YpYp / YpYp_std
+        return XX / XX_std - XpXp / XpXp_std
 
-    def _transform_many(self, Y: pd.DataFrame) -> pd.DataFrame:
+    def _transform_many(self, X: pd.DataFrame) -> pd.DataFrame:
         if (
             isinstance(self.subid, MiniBatchTransformer)
             or not isinstance(self.subid, Transformer)
             and hasattr(self.subid, "transform_many")
         ):
-            Y_p = self.subid.transform_many(Y)
+            X_p = self.subid.transform_many(X)
         else:
-            Y_p = pd.DataFrame(
+            X_p = pd.DataFrame(
                 [
                     self.subid.transform_one(x)
-                    for x in Y.to_dict(orient="records")
+                    for x in X.to_dict(orient="records")
                 ]
             )
-        return Y_p
+        return X_p
 
-    def update(self, x: dict) -> None:
-        self._Y.append(x)
+    def update(self, x: dict, **params) -> None:
+        self._X.append(x)
 
         ref_delay = self.time_lag + self.test_size
-        if len(self._Y) > ref_delay:
+        if len(self._X) > ref_delay:
             if isinstance(self.subid, BaseRolling):
-                self.subid.update(self._Y[-ref_delay - 1])
+                self.subid.update(self._X[-ref_delay - 1], **params)
             else:
-                self.subid.learn_one(self._Y[-ref_delay - 1])
+                self.subid.learn_one(self._X[-ref_delay - 1], **params)
         self.n_seen += 1
 
         if (
             self.n_seen >= self.grace_period
-            and len(self._Y) == self.ref_size + ref_delay
+            and len(self._X) == self.ref_size + ref_delay
         ):
-            Y = pd.DataFrame(self._Y)
-            Y_p = self._transform_many(Y)
+            X = pd.DataFrame(self._X)
+            X_p = self._transform_many(X)
             D_train = (
                 self._compute_distance(
-                    Y.iloc[: self.ref_size, :],
-                    Y_p.iloc[: self.ref_size, :],
+                    X.iloc[: self.ref_size, :],
+                    X_p.iloc[: self.ref_size, :],
                 )
                 / self.ref_size
             )
             D_test = (
                 self._compute_distance(
-                    Y.iloc[-self.test_size :, :],
-                    Y_p.iloc[-self.test_size :, :],
+                    X.iloc[-self.test_size :, :],
+                    X_p.iloc[-self.test_size :, :],
                 )
                 / self.test_size
             )
@@ -134,9 +134,9 @@ class SubIDDriftDetector(DriftDetector):
             self.score = 0.0
             self._drift_detected = False
 
-    def learn_one(self, x: dict) -> None:
+    def learn_one(self, x: dict, **params) -> None:
         """Allias for update method for interoperability with Pipeline."""
-        self.update(x)
+        self.update(x, **params)
 
 
 class DMDOptSubIDDriftDetector(SubIDDriftDetector):
@@ -173,27 +173,27 @@ class DMDOptSubIDDriftDetector(SubIDDriftDetector):
             grace_period=grace_period,
         )
         self.subid = subid  # Correct type hinting
-        self._Yp: deque[dict] = deque(
+        self._Xp: deque[dict] = deque(
             maxlen=self.ref_size + self.time_lag + self.test_size
         )
 
-    def _transform_many(self, Y: pd.DataFrame) -> pd.DataFrame:
+    def _transform_many(self, X: pd.DataFrame) -> pd.DataFrame:
         if not self.subid.A_allclose:
             if (
                 isinstance(self.subid, MiniBatchTransformer)
                 or not isinstance(self.subid, Transformer)
                 and hasattr(self.subid, "transform_many")
             ):
-                Y_p = self.subid.transform_many(Y)
+                X_p = self.subid.transform_many(X)
             else:
-                Y_p = pd.DataFrame(
+                X_p = pd.DataFrame(
                     [
                         self.subid.transform_one(x)
-                        for x in Y.to_dict(orient="records")
+                        for x in X.to_dict(orient="records")
                     ]
                 )
-            self._Yp.extend(Y_p.to_dict(orient="records"))
+            self._Xp.extend(X_p.to_dict(orient="records"))
         else:
-            self._Yp.append(self.subid.transform_one(Y.iloc[-1].to_dict()))
+            self._Xp.append(self.subid.transform_one(X.iloc[-1].to_dict()))
 
-        return pd.DataFrame(self._Yp)
+        return pd.DataFrame(self._Xp)
