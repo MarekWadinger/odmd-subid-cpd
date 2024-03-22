@@ -1,4 +1,4 @@
 numpy~=1.26.3
 pandas~=2.2.0
-git@github.com:MarekWadinger/river.git
+git+https://github.com/MarekWadinger/river.git
 scipy~=1.12.0
