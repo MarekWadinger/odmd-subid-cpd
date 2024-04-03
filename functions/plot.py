@@ -52,5 +52,7 @@ def plot_chd(
                 inlay_ax.plot(x_in, data[idx_in_start:idx_in_end], label=label)
                 inlay_ax.grid(True)
                 inlay_ax.set_yticklabels([])
+                inlay_ax.set_xticklabels([])
+                ax.indicate_inset_zoom(inlay_ax, edgecolor="black")
 
     return fig, axs

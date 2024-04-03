@@ -14,6 +14,7 @@ TODO:
 References:
     [^1]: Schmid, P. (2022). Dynamic Mode Decomposition and Its Variants. 54(1), pp.225-254. doi:[10.1146/annurev-fluid-030121-015835](https://doi.org/10.1146/annurev-fluid-030121-015835).
 """
+
 from typing import Union
 
 import numpy as np
@@ -151,8 +152,14 @@ class DMDwC(DMD):
         self.l: int
 
     def fit(
-        self, X: np.ndarray, U: np.ndarray, Y: Union[np.ndarray, None] = None
+        self,
+        X: np.ndarray,
+        Y: Union[np.ndarray, None] = None,
+        U: Union[np.ndarray, None] = None,
     ):
+        if U is None:
+            super().fit(X, Y)
+            return
         U_ = U.copy()
         if not self.known_B:
             X = np.hstack((X, U_))
@@ -189,8 +196,8 @@ class DMDwC(DMD):
     def predict(
         self,
         x: np.ndarray,
-        u: np.ndarray,
         forecast: int = 1,
+        U: Union[np.ndarray, None] = None,
     ) -> np.ndarray:
         """
         Predict future values using the trained DMD model.
@@ -203,17 +210,20 @@ class DMDwC(DMD):
         - predictions: numpy.ndarray
             Predicted data matrix for the specified number of prediction steps.
         """
+        if U is None:
+            mat = super().predict(x, forecast)
+            return mat
         if self.A is None or self.m is None:
             raise RuntimeError("Fit the model before making predictions.")
-        if forecast != 1 and u.shape[0] != forecast:
+        if forecast != 1 and U.shape[0] != forecast:
             raise ValueError(
                 "u must have forecast number of time steps.\n"
-                f"u: {u.shape[1]}, forecast: {forecast}"
+                f"u: {U.shape[1]}, forecast: {forecast}"
             )
 
         mat = np.zeros((forecast + 1, self.m - self.l))
         mat[0, :] = x
         for s in range(1, forecast + 1):
-            action = (self.B @ u[s - 1, :]).real
+            action = (self.B @ U[s - 1, :]).real
             mat[s, :] = (self.A @ mat[s - 1, :]).real + action
         return mat[1:, :]

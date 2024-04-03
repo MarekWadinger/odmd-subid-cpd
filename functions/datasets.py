@@ -106,3 +106,91 @@ def load_cats(file_path: str = "data/cats/data.csv") -> pd.DataFrame:
     df.to_csv(file_path)
 
     return df
+
+
+def load_skab(file_path: str = "data/skab") -> dict[str, list[pd.DataFrame]]:
+    from urllib.parse import urlparse
+
+    url = "https://api.github.com/repos/waico/SKAB/contents/data"
+
+    if not os.path.exists(file_path):
+
+        def download_csv_from_git(url, save_path):
+            # Parse the URL to get the folder name
+            parsed_url = urlparse(url)
+            folder_name = os.path.basename(parsed_url.path)
+
+            # Create the folder if it doesn't exist
+            folder_path = os.path.join(save_path, folder_name)
+            os.makedirs(folder_path, exist_ok=True)
+
+            # Get the contents of the folder
+            response = requests.get(url)
+            if response.status_code == 200:
+                for item in response.json():
+                    if item["type"] == "file" and item["name"].endswith(
+                        ".csv"
+                    ):
+                        print(f"Downloading '{item['name']}'")
+                        file_url = item["download_url"]
+                        file_name = os.path.basename(p=file_url)
+                        file_path = os.path.join(folder_path, file_name)
+                        with open(file_path, "wb") as file:
+                            file.write(requests.get(file_url).content)
+                    elif item["type"] == "dir":
+                        download_csv_from_git(item["url"], folder_path)
+
+        # Example usage
+        download_csv_from_git(url, file_path)
+
+    # Recursively go through directories in file_path
+    data_dict = {}
+    for root, _, files in os.walk(file_path):
+        # Create a dictionary to store the data frames
+        relative_path = os.path.relpath(root, file_path)
+        if relative_path != ".":
+            data_dict[relative_path] = []
+            for file in files:
+                if file.endswith(".csv"):
+                    # Get the relative path of the file
+                    # Create the corresponding directory structure in the dictionary
+                    df = pd.read_csv(
+                        os.path.join(root, file), index_col=0, sep=";"
+                    )
+                    # Store the data frame in the dictionary
+                    data_dict[relative_path].append(df)
+    # Return the data dictionary
+    return data_dict
+
+
+def load_usp(
+    file_path: str = "data/usp-stream-data",
+) -> dict[str, pd.DataFrame]:
+    from scipy.io.arff import loadarff
+
+    url = (
+        "http://sites.labic.icmc.usp.br/vsouza/repository/usp-stream-data.zip"
+    )
+
+    if not os.path.exists(file_path):
+        response = requests.get(url)
+        if response.status_code == 200:
+            raise NotImplementedError(
+                f"Please, download the data from the following URL: {url}.\n"
+                "Feel free to contribute by implementing the download process."
+            )
+
+    # Recursively go through directories in file_path
+    data_dict: dict[str, pd.DataFrame] = {}
+    for root, _, files in os.walk(file_path):
+        # Create a dictionary to store the data frames
+        if root != ".":
+            for file in files:
+                if file.endswith(".arff"):
+                    # Get the relative path of the file
+                    # Create the corresponding directory structure in the dictionary
+                    raw_data, meta = loadarff(os.path.join(root, file))
+                    df = pd.DataFrame(raw_data, columns=meta.names())
+                    # Store the data frame in the dictionary
+                    data_dict[file.split(".")[0]] = df
+    return data_dict
