@@ -1,15 +1,16 @@
-"""Change Detection based on Subspace Identification algorithm.
-"""
+"""Change Detection based on Subspace Identification algorithm."""
+
 from collections import deque
 
 import numpy as np
 import pandas as pd
-from river.base import DriftDetector, MiniBatchTransformer, Transformer
-from river.utils.rolling import BaseRolling
+from river.anomaly.base import AnomalyDetector
+from river.base import MiniBatchTransformer, Transformer
 from river.decomposition import OnlineDMD, OnlineDMDwC
+from river.utils.rolling import BaseRolling
 
 
-class SubIDDriftDetector(DriftDetector):
+class SubIDChangeDetector(AnomalyDetector):
     def __init__(
         self,
         subid: MiniBatchTransformer | Transformer | BaseRolling,
@@ -18,6 +19,7 @@ class SubIDDriftDetector(DriftDetector):
         threshold: float = 0.1,
         time_lag: int = 0,
         grace_period: int = 0,
+        learn_after_grace: bool = True,
     ):
         self.subid = subid
         self.threshold = threshold
@@ -33,8 +35,9 @@ class SubIDDriftDetector(DriftDetector):
         # assert self.grace_period < self.test_size
         # TODO: basically grace period should be omitted and detection start once Transformer is fitted
         self.grace_period = grace_period
+        self.learn_after_grace = learn_after_grace
         self.n_seen = 0
-        self.score: float
+        self.score: float = 0.0
 
         self._distances: tuple[float, float]
         self._drift_detected: bool
@@ -67,10 +70,10 @@ class SubIDDriftDetector(DriftDetector):
         """
         XX = (X**2).sum().sum()
         # XX = np.linalg.norm(X, 1)
-        XX_std = np.sqrt(XX)
+        XX_std = 1  # np.sqrt(XX)
         XpXp = (X_p**2).sum().sum()
         # XpXp = np.linalg.norm(X_p, 1)
-        XpXp_std = np.sqrt(XpXp)
+        XpXp_std = 1  # np.sqrt(XpXp)
 
         return XX / XX_std - XpXp / XpXp_std
 
@@ -94,7 +97,7 @@ class SubIDDriftDetector(DriftDetector):
         self._X.append(x)
 
         ref_delay = self.time_lag + self.test_size
-        if len(self._X) > ref_delay:
+        if len(self._X) > ref_delay and (self.learn_after_grace or self.n_seen < self.grace_period):
             if isinstance(self.subid, BaseRolling):
                 self.subid.update(self._X[-ref_delay - 1], **params)
             else:
@@ -107,7 +110,7 @@ class SubIDDriftDetector(DriftDetector):
         ):
             X = pd.DataFrame(self._X)
             X_p = self._transform_many(X)
-            D_train = (
+            D_train: float = (
                 self._compute_distance(
                     X.iloc[: self.ref_size, :],
                     X_p.iloc[: self.ref_size, :],
@@ -127,6 +130,9 @@ class SubIDDriftDetector(DriftDetector):
             self.score = (D_test / D_train) - 1
             # TODO: explore interesting scoring option
             # self.score = D_train - D_test
+            # TODO: figure out proper way of utilizing imaginary part of score
+            if isinstance(self.score, complex):
+                self.score = self.score.real + np.abs(self.score.imag)
             # TODO: comment on score shawing
             self.score = max(self.score, 0.0)
             self._drift_detected = self.score > self.threshold
@@ -134,12 +140,15 @@ class SubIDDriftDetector(DriftDetector):
             self.score = 0.0
             self._drift_detected = False
 
+    def score_one(self, *args):
+        return self.score
+
     def learn_one(self, x: dict, **params) -> None:
         """Allias for update method for interoperability with Pipeline."""
         self.update(x, **params)
 
 
-class DMDOptSubIDDriftDetector(SubIDDriftDetector):
+class DMDOptSubIDChangeDetector(SubIDChangeDetector):
     """Change-Point Detection on Subspace Identification with Online DMD.
 
     This class implements is optimized for the OnlineDMD and OnlineDMDwC classes,
@@ -152,7 +161,7 @@ class DMDOptSubIDDriftDetector(SubIDDriftDetector):
     in D_train - D_test score.
 
     Args:
-        SubIDDriftDetector (_type_): _description_
+        SubIDChangeDetector (_type_): _description_
     """
 
     def __init__(
@@ -178,7 +187,10 @@ class DMDOptSubIDDriftDetector(SubIDDriftDetector):
         )
 
     def _transform_many(self, X: pd.DataFrame) -> pd.DataFrame:
-        if not self.subid.A_allclose:
+        if (
+            isinstance(self.subid, (OnlineDMD, OnlineDMDwC))
+            and not self.subid.A_allclose
+        ):
             if (
                 isinstance(self.subid, MiniBatchTransformer)
                 or not isinstance(self.subid, Transformer)
