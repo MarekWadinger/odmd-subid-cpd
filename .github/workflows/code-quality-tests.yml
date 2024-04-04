@@ -24,11 +24,11 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
 
     steps:
-    - uses: actions/checkout@v4.1.1
+    - uses: actions/checkout@main
       with:
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@main
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip' # caching pip dependencies
@@ -43,7 +43,7 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
     - name: Check with ruff
-      uses: chartboost/ruff-action@v1
+      uses: chartboost/ruff-action@main
       with:
         args: --line-length=79
     - name: Lint with flake8
@@ -63,7 +63,7 @@ jobs:
     #     genbadge tests -o reports/test-badge.svg
     #     genbadge coverage -o reports/coverage-badge.svg
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4.0.1
+      uses: codecov/codecov-action@main
       with:
         files: reports/coverage/coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}

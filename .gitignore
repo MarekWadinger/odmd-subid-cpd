@@ -27,9 +27,6 @@ venv.bak/
 # VSC
 .vscode/
 
-# Misc
-paho*
-
 # Plots
 plots/
 *.pdf
@@ -40,12 +37,11 @@ plots/
 !**/data/input/
 !**/data/output/
 
+# Results
+results/
+
 # Misc
 config.ini
-tests/*
-!tests/test.csv
-!tests/sample.json
-!tests/test*.py
 !reports/.coveragerc
 
 # Allow gitignore
