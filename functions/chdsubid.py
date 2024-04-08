@@ -70,6 +70,8 @@ class SubIDChangeDetector(AnomalyDetector):
         """
         XX = (X**2).sum().sum()
         # XX = np.linalg.norm(X, 1)
+        # Using following normalization changes the score baseline based on
+        #  the proportion of ref and test size
         XX_std = 1  # np.sqrt(XX)
         XpXp = (X_p**2).sum().sum()
         # XpXp = np.linalg.norm(X_p, 1)
@@ -97,7 +99,9 @@ class SubIDChangeDetector(AnomalyDetector):
         self._X.append(x)
 
         ref_delay = self.time_lag + self.test_size
-        if len(self._X) > ref_delay and (self.learn_after_grace or self.n_seen < self.grace_period):
+        if len(self._X) > ref_delay and (
+            self.learn_after_grace or self.n_seen < self.grace_period
+        ):
             if isinstance(self.subid, BaseRolling):
                 self.subid.update(self._X[-ref_delay - 1], **params)
             else:

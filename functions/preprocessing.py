@@ -46,23 +46,30 @@ def hankel(
            [ 2.,  8.,  3.,  7.,  4.,  6.],
            [ 3.,  7.,  4.,  6.,  5.,  5.]])
     """
+    if hn <= 1:
+        return X
+
     if isinstance(X, pd.DataFrame):
         feature_names_in_ = X.columns
+        index_in_ = X.index
         X = X.values
     else:
         feature_names_in_ = None
+
     if len(X.shape) > 1:
         n = X.shape[1]
     else:
         n = 1
-    if hn <= 1:
-        return X
+
     hX = np.empty((X.shape[0], hn * n))
+    # Roll forth so that the last hankel columns are the start of the array
     X = np.roll(X, hn - 1, axis=0)
     for i in range(0, hn * n, n):
         hX[:, i : i + n] = X if len(X.shape) > 1 else X.reshape(-1, 1)
         if return_partial == "copy" and i / n < hn - 1:
-            hX[: hn - int(i / n) - 1, i : i + n] = hX[hn - int(i / n) - 1, i : i + n]
+            hX[: hn - int(i / n) - 1, i : i + n] = hX[
+                hn - int(i / n) - 1, i : i + n
+            ]
         elif return_partial and i / n < hn - 1:
             hX[: hn - int(i / n) - 1, i : i + n] = np.nan
         X = np.roll(X, -1, axis=0)
@@ -72,5 +79,6 @@ def hankel(
         return pd.DataFrame(
             hX,
             columns=[f"{f}_{i}" for i in range(hn) for f in feature_names_in_],
+            index=index_in_,
         )
     return hX
