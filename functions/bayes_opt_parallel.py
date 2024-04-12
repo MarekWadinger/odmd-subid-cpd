@@ -5,7 +5,6 @@ from multiprocessing import cpu_count
 
 from bayes_opt import BayesianOptimization as BO
 from bayes_opt.event import Events
-from bayes_opt.logger import JSONLogger
 from bayes_opt.util import UtilityFunction
 from colorama import Fore
 
@@ -48,7 +47,6 @@ class ColoramaIterator:
 
 
 colorama_iterator = ColoramaIterator()
-RANDOM_STATE = 42
 iteration = 0
 
 
@@ -85,8 +83,16 @@ class BayesianOptimizationHandler(RequestHandler):
         finally:
             suggested_params = self._bo.suggest(self._uf)
             iteration += 1
-            if self._verbose > 1:
-                print("Iter", iteration)
+
+        if self._bo._bounds_transformer and iteration > 0:
+            # The bounds transformer should only modify the bounds after
+            # the init_points points (only for the true iterations)
+            self._bo.set_bounds(
+                self._bo._bounds_transformer.transform(self._bo._space)
+            )
+
+        if self._verbose > 2:
+            print("Iteration:", iteration)
 
         self.write(json.dumps(suggested_params))
 
@@ -96,9 +102,10 @@ class BayesianOptimization(BO):
         self,
         f,
         pbounds,
-        constraints,
+        constraints=None,
         random_state=None,
         verbose=2,
+        bounds_transformer=None,
         allow_duplicate_points=True,
     ):
         super().__init__(
@@ -107,7 +114,8 @@ class BayesianOptimization(BO):
             constraints,
             random_state,
             verbose,
-            allow_duplicate_points=allow_duplicate_points,
+            bounds_transformer,
+            allow_duplicate_points,
         )
         self.f = f
         self.stop_event = threading.Event()
@@ -125,15 +133,16 @@ class BayesianOptimization(BO):
                 r"/bayesian_optimization",
                 BayesianOptimizationHandler,
                 {
-                    "bo": super(),
+                    "bo": self,
                     "init_points": init_points,
+                    "verbose": self._verbose,
                 },
             ),
         ]
-        server = tornado.httpserver.HTTPServer(
+        self.server = tornado.httpserver.HTTPServer(
             tornado.web.Application(handlers)
         )
-        server.listen(9009)
+        self.server.listen(9009)
         tornado.ioloop.IOLoop.instance().start()
 
     def run_optimizer(self, config, n_iter):
@@ -179,8 +188,12 @@ class BayesianOptimization(BO):
         self,
         init_points=5,
         n_iter=100,
-        n_jobs=1,
+        n_jobs=cpu_count(),
     ):
+        # Reset iteration count for each initialization
+        global iteration
+        iteration = 0
+
         self.dispatch(Events.OPTIMIZATION_START)
         ioloop = tornado.ioloop.IOLoop.instance()
         optimizers_config = [
@@ -215,44 +228,17 @@ class BayesianOptimization(BO):
         for optimizer_thread in optimizer_threads:
             optimizer_thread.join()
 
-        if self._verbose > 2:
+        if self._verbose > 1:
             for result in self.results:
                 print(
                     result[0], "found a maximum value of: {}".format(result[2])
                 )
 
         ioloop.stop()
+        self.server.stop()
         self.dispatch(Events.OPTIMIZATION_END)
         self.results = sorted(
             self.results,
             key=lambda x: float("-inf") if x[2] is None else x[2],
             reverse=True,
         )
-
-
-# if __name__ == "__main__":
-
-#     def mod_fun(x, y):
-#         """Function with unknown internals we wish to maximize.
-
-#         This is just serving as an example, however, for all intents and
-#         purposes think of the internals of this function, i.e.: the process
-#         which generates its outputs values, as unknown.
-#         """
-#         # time.sleep(random.uniform(0, 7))
-#         return -(x**2) - (y - 1) ** 2 + 1
-
-#     pbounds = {"x": (-4, 4), "y": (-3, 3)}
-#     n_jobs = cpu_count()
-#     optimizer = BayesianOptimization(
-#         f=mod_fun,
-#         pbounds=pbounds,
-#         constraints=None,
-#         random_state=RANDOM_STATE,
-#         verbose=1,
-#         allow_duplicate_points=True,
-#     )
-#     logger = JSONLogger(path="./.results/test.log")
-#     optimizer.subscribe(Events.OPTIMIZATION_END, logger)
-#     optimizer.maximize(n_jobs=n_jobs)
-#     print(optimizer.max)
