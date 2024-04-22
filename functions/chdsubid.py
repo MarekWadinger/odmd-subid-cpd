@@ -191,25 +191,16 @@ class DMDOptSubIDChangeDetector(SubIDChangeDetector):
         )
 
     def _transform_many(self, X: pd.DataFrame) -> pd.DataFrame:
-        if (
-            isinstance(self.subid, (OnlineDMD, OnlineDMDwC))
-            and not self.subid.A_allclose
-        ):
-            if (
-                isinstance(self.subid, MiniBatchTransformer)
-                or not isinstance(self.subid, Transformer)
-                and hasattr(self.subid, "transform_many")
-            ):
-                X_p = self.subid.transform_many(X)
-            else:
-                X_p = pd.DataFrame(
-                    [
-                        self.subid.transform_one(x)
-                        for x in X.to_dict(orient="records")
-                    ]
-                )
-            self._Xp.extend(X_p.to_dict(orient="records"))
+        if isinstance(self.subid, BaseRolling):
+            subid_: Transformer = self.subid.obj  # type: ignore
         else:
-            self._Xp.append(self.subid.transform_one(X.iloc[-1].to_dict()))
+            subid_ = self.subid
+        if (
+            isinstance(subid_, (OnlineDMD, OnlineDMDwC))
+        ) and subid_.A_allclose:
+            self._Xp.append(subid_.transform_one(X.iloc[-1].to_dict()))
+        else:
+            X_p = super()._transform_many(X)
+            self._Xp.extend(X_p.to_dict(orient="records"))
 
         return pd.DataFrame(self._Xp)

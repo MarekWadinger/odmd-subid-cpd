@@ -4,9 +4,9 @@ from matplotlib.axes import Axes
 
 from .preprocessing import normalize as _normalize
 
-
 RED_ALPHA05 = "#ea9293"
 GRAY_ALPHA025 = "#dedede"
+
 
 def plot_chd(
     datas: list[np.ndarray],
