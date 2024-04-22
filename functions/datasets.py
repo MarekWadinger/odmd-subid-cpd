@@ -115,13 +115,16 @@ def load_skab(file_path: str = "data/skab") -> dict[str, list[pd.DataFrame]]:
 
     if not os.path.exists(file_path):
 
-        def download_csv_from_git(url, save_path):
+        def download_csv_from_git(url, save_path, add_base: bool = True):
             # Parse the URL to get the folder name
             parsed_url = urlparse(url)
             folder_name = os.path.basename(parsed_url.path)
 
             # Create the folder if it doesn't exist
-            folder_path = os.path.join(save_path, folder_name)
+            if add_base:
+                folder_path = os.path.join(save_path, folder_name)
+            else:
+                folder_path = save_path
             os.makedirs(folder_path, exist_ok=True)
 
             # Get the contents of the folder
@@ -131,7 +134,7 @@ def load_skab(file_path: str = "data/skab") -> dict[str, list[pd.DataFrame]]:
                     if item["type"] == "file" and item["name"].endswith(
                         ".csv"
                     ):
-                        print(f"Downloading '{item['name']}'")
+                        print(f"Downloading {item['name']: <79s}", end="\r")
                         file_url = item["download_url"]
                         file_name = os.path.basename(p=file_url)
                         file_path = os.path.join(folder_path, file_name)
@@ -141,7 +144,7 @@ def load_skab(file_path: str = "data/skab") -> dict[str, list[pd.DataFrame]]:
                         download_csv_from_git(item["url"], folder_path)
 
         # Example usage
-        download_csv_from_git(url, file_path)
+        download_csv_from_git(url, file_path, add_base=False)
 
     # Recursively go through directories in file_path
     data_dict = {}

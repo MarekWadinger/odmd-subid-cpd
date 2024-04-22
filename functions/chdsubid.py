@@ -15,7 +15,7 @@ class SubIDChangeDetector(AnomalyDetector):
         self,
         subid: MiniBatchTransformer | Transformer | BaseRolling,
         ref_size: int,
-        test_size: int,
+        test_size: int | None = None,
         threshold: float = 0.1,
         time_lag: int = 0,
         grace_period: int = 0,
@@ -27,7 +27,7 @@ class SubIDChangeDetector(AnomalyDetector):
             self.ref_size = subid.window_size  # type: ignore
         else:
             self.ref_size = ref_size
-        self.test_size = test_size
+        self.test_size = test_size if test_size is not None else ref_size
         self.time_lag = time_lag
         assert self.ref_size > 0
         assert self.test_size > 0
@@ -40,7 +40,7 @@ class SubIDChangeDetector(AnomalyDetector):
         self.score: float = 0.0
 
         self._distances: tuple[float, float]
-        self._drift_detected: bool
+        self._drift_detected: bool = False
 
         self._X: deque[dict] = deque(
             maxlen=self.ref_size + self.time_lag + self.test_size
@@ -147,6 +147,9 @@ class SubIDChangeDetector(AnomalyDetector):
     def score_one(self, *args):
         return self.score
 
+    def predict_one(self, *args):
+        return self._drift_detected
+
     def learn_one(self, x: dict, **params) -> None:
         """Allias for update method for interoperability with Pipeline."""
         self.update(x, **params)
@@ -172,7 +175,7 @@ class DMDOptSubIDChangeDetector(SubIDChangeDetector):
         self,
         subid: OnlineDMD | OnlineDMDwC,
         ref_size: int,
-        test_size: int,
+        test_size: int | None = None,
         threshold: float = 0.1,
         time_lag: int = 0,
         grace_period: int = 0,
