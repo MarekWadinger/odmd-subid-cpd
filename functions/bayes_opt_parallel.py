@@ -140,7 +140,7 @@ class BayesianOptimization(BO):
             ),
         ]
         self.server = tornado.httpserver.HTTPServer(
-            tornado.web.Application(handlers)
+            tornado.web.Application(handlers)  # type: ignore
         )
         self.server.listen(9009)
         tornado.ioloop.IOLoop.instance().start()
@@ -149,12 +149,12 @@ class BayesianOptimization(BO):
         name = config["name"]
         colour = config["colour"]
 
-        register_data = {}
+        register_data: dict[str, dict | int] = {}
         max_params = None
         max_target = None
         # for _ in range(2):
         while not self.stop_event.is_set():
-            status = name + " wants to register: {}.\n".format(register_data)
+            status = name + f" wants to register: {register_data}.\n"
 
             resp = requests.post(
                 url="http://localhost:9009/bayesian_optimization",
@@ -171,8 +171,8 @@ class BayesianOptimization(BO):
                 max_target = target
                 max_params = resp
 
-            status += name + " got {} as target.\n".format(target)
-            status += name + " will register next: {}.\n".format(register_data)
+            status += name + f" got {target} as target.\n"
+            status += name + f" will register next: {register_data}.\n"
             if self._verbose > 1:
                 print(colour + status, end="\n")
             if iteration > n_iter:
@@ -230,9 +230,7 @@ class BayesianOptimization(BO):
 
         if self._verbose > 1:
             for result in self.results:
-                print(
-                    result[0], "found a maximum value of: {}".format(result[2])
-                )
+                print(result[0], f"found a maximum value of: {result[2]}")
 
         ioloop.stop()
         self.server.stop()

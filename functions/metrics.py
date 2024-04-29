@@ -2,6 +2,8 @@
 This module is part of library (tsad)[https://github.com/waico/tsad]
 """
 
+from typing import Any
+
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
@@ -117,7 +119,7 @@ def check_errors(my_list):
     assert isinstance(my_list, list)
     mx = 1
     #     ravel = []
-    level_list = {}
+    level_list: dict[int, Any] = {}
 
     def check_error(my_list):
         return not (
@@ -181,7 +183,7 @@ def extract_cp_confusion_matrix(
 
     times_pred = prediction[prediction.dropna() == 1].sort_index().index
 
-    my_dict = {}
+    my_dict: dict[str, Any] = {}
     my_dict["TPs"] = {}
     my_dict["FPs"] = []
     my_dict["FNs"] = []
@@ -672,7 +674,6 @@ def chp_score(
                 globals()["ax" + str(i)].legend()
             plt.show()
         else:
-
             f = plt.figure(figsize=(16, 5 * num_datasets))
             grid = gridspec.GridSpec(num_datasets, 1)
             detalization = 100
@@ -764,7 +765,8 @@ def chp_score(
         return results
 
     elif metric == "average_time":
-        missing, detectHistory, FP, all_true_anom = 0, [], 0, 0
+        missing, FP, all_true_anom = 0, 0, 0
+        detectHistory: list[Any] = []
         for i in range(len(prediction)):
             missing_, detectHistory_, FP_, all_true_anom_ = (
                 single_average_delay(
