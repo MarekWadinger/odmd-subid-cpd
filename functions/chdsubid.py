@@ -9,6 +9,47 @@ from river.base import MiniBatchTransformer, Transformer
 from river.decomposition import OnlineDMD, OnlineDMDwC
 from river.utils.rolling import BaseRolling
 
+from .preprocessing import hankel
+
+
+# # Default parameters
+def get_default_rank(X):
+    """Get default rank for the given data matrix
+
+    Args:
+        X (np.ndarray): Data matrix
+
+    Returns:
+        int: Default rank
+
+    References:
+        [1] Gavish, M., and Donoho L. D. (2014). The Optimal Hard Threshold for Singular Values is 4/sqrt(3). IEEE Transactions on Information Theory 60.8 (2014): 5040-5053. doi:[10.1109/TIT.2014.2323359](https://doi.org/10.1109/TIT.2014.2323359).
+    """
+    s = np.linalg.svd(X.T, compute_uv=False)
+    beta = X.shape[1] / X.shape[0]
+    omega = 0.56 * beta**3 - 0.95 * beta**2 + 1.82 * beta + 1.43
+    r = sum(s > omega * np.median(s))
+    return r
+
+
+def get_default_params(X, window_size):
+    """Get default parameters for the given dataset and window size
+    Args:
+        X (np.ndarray): Data matrix
+        window_size (int): Window size. What kind of structural changes are we looking for?
+
+    References:
+        [2] Moskvina, V., & Zhigljavsky, A. (2003). An Algorithm Based on Singular Spectrum Analysis for Change-Point Detection. Communications in Statistics - Simulation and Computation, 32(2), 319-352. doi:[10.1081/SAC-120017494](https://doi.org/10.1081/SAC-120017494).
+    """
+    # If window_size is not very large, then take half
+    hn = window_size // 2
+    # Base size
+    ref_size = window_size
+    test_size = window_size
+    # Optimal low-rank representation of signal with unknown noise variance
+    r = get_default_rank(hankel(X[:window_size], hn))
+    return window_size, hn, ref_size, test_size, r
+
 
 class SubIDChangeDetector(AnomalyDetector):
     def __init__(
@@ -16,7 +57,7 @@ class SubIDChangeDetector(AnomalyDetector):
         subid: MiniBatchTransformer | Transformer | BaseRolling,
         ref_size: int,
         test_size: int | None = None,
-        threshold: float = 0.1,
+        threshold: float = 0.25,
         time_lag: int = 0,
         grace_period: int = 0,
         learn_after_grace: bool = True,
