@@ -11,6 +11,7 @@ def normalize(x):
 def hankel(
     X: np.ndarray | pd.DataFrame,
     hn: int,
+    step: int = 1,
     return_partial: bool | Literal["copy"] = "copy",
 ) -> np.ndarray | pd.DataFrame:
     """Create a Hankel matrix from a given input array.
@@ -18,6 +19,7 @@ def hankel(
     Args:
         X (np.ndarray): The input array.
         hn (int): The number of columns in the Hankel matrix.
+        step (int, optional): The step size for the delays. Defaults to 1.
         cut_rollover (bool, optional): Whether to cut the rollover part of the Hankel matrix. Defaults to True.
 
     Returns:
@@ -45,6 +47,13 @@ def hankel(
            [ 1.,  9.,  2.,  8.,  3.,  7.],
            [ 2.,  8.,  3.,  7.,  4.,  6.],
            [ 3.,  7.,  4.,  6.,  5.,  5.]])
+    >>> X = np.array([[1.0, 2.0, 3.0, 4.0, 5.0], [9.0, 8.0, 7.0, 6.0, 5.0]]).T
+    >>> hankel(X, 3, 2, return_partial=True)
+    array([[nan, nan, nan, nan,  3.,  7.],
+           [nan, nan,  2.,  8.,  4.,  6.],
+           [ 1.,  9.,  3.,  7.,  5.,  5.],
+           [ 2.,  8.,  4.,  6.,  1.,  9.],
+           [ 3.,  7.,  5.,  5.,  2.,  8.]])
     """
     if hn <= 1:
         return X
@@ -72,7 +81,7 @@ def hankel(
             ]
         elif return_partial and i / n < hn - 1:
             hX[: hn - int(i / n) - 1, i : i + n] = np.nan
-        X = np.roll(X, -1, axis=0)
+        X = np.roll(X, -step, axis=0)
     if not return_partial:
         hX = hX[hn - 1 :]
     if feature_names_in_ is not None:
