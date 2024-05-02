@@ -183,6 +183,19 @@ def load_usp(
                 "Feel free to contribute by implementing the download process."
             )
 
+    def convert_dtypes_numeric(df):
+        for col in df:
+            df[col] = df[col].map(
+                lambda x: x.decode("utf-8") if isinstance(x, bytes) else x
+            )
+            # We are only interested in ordinal numeric values
+            df[col] = df[col].map(
+                lambda x: float(x)
+                if isinstance(x, str) and x.isnumeric()
+                else x
+            )
+        return df
+
     # Recursively go through directories in file_path
     data_dict: dict[str, pd.DataFrame] = {}
     for root, _, files in os.walk(file_path):
@@ -190,10 +203,37 @@ def load_usp(
         if root != ".":
             for file in files:
                 if file.endswith(".arff"):
+                    print(f"=== Loading {file} ".ljust(79, "="), end="\r")
                     # Get the relative path of the file
                     # Create the corresponding directory structure in the dictionary
                     raw_data, meta = loadarff(os.path.join(root, file))
                     df = pd.DataFrame(raw_data, columns=meta.names())
                     # Store the data frame in the dictionary
                     data_dict[file.split(".")[0]] = df
+
+    # Rename the class column to "class" for consistency
+    data_dict["chess"] = data_dict["chess"].rename(
+        columns={"outcome": "class"}
+    )
+    data_dict["airlines"] = data_dict["airlines"].rename(
+        columns={"Delay": "class"}
+    )
+    data_dict["gassensor"] = data_dict["gassensor"].rename(
+        columns={"Class": "class"}
+    )
+    data_dict["ozone"] = data_dict["ozone"].rename(columns={"Class": "class"})
+
+    # Convert the data types to numeric
+    for k, df in data_dict.items():
+        print(f"=== Processing {k} ".ljust(79, "="), end="\r")
+        df = convert_dtypes_numeric(df)
+        gt = df["class"].copy(deep=True)
+        df = df.select_dtypes(include="number")
+        if "class" not in df.columns:
+            if any(gt.apply(type) == str):
+                df["class"] = gt.astype("category").cat.codes
+            else:
+                df["class"] = gt
+        df.index = pd.to_datetime(df.index, unit="s")
+        data_dict[k] = df
     return data_dict
