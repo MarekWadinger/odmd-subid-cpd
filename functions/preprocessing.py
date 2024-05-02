@@ -2,6 +2,64 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+from river.preprocessing import Hankelizer
+
+
+class Hankelizer(Hankelizer):
+    """Mini-batch Hankelizer that keeps track of the transformation.
+
+    Similar to the original Hankelizer, it
+    The _memory_usage differs from the original Hankelizer due to storing the
+    transformation track which can be significant for large datasets.
+
+    Examples:
+    Using Mini-batch Hankelizer is equivalent to
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> from river.preprocessing import Hankelizer as H
+    >>> X_train = pd.DataFrame(np.random.rand(10, 2), columns=["a", "b"])
+    >>> hn = 3
+    >>> hankelizer = Hankelizer(hn)
+    >>> hankelizer_old = H(hn)
+
+    >>> hankelizer.learn_many(X_train)
+    >>> X_t_new = hankelizer.transform_many(X_train)
+    >>> X_t_old_ = []
+    >>> for j, x in enumerate(X_train.to_dict(orient="records")):
+    ...     hankelizer_old.learn_one(x)
+    ...     X_t_old_.append(hankelizer_old.transform_one(x))
+    >>> X_t_old = pd.DataFrame(X_t_old_)
+    >>> X_t_new.equals(X_t_old)
+    True
+
+    Calling transform_many first produces consistent behavior
+    >>> hankelizer = Hankelizer(hn)
+    >>> X_t_first = hankelizer.transform_many(X_train)
+    >>> X_t_first.equals(X_t_new)
+    True
+    """
+
+    def __init__(
+        self, w: int = 2, return_partial: bool | Literal["copy"] = "copy"
+    ):
+        super().__init__(w, return_partial)
+        self.transform_track: list[dict] = []
+
+    def learn_many(self, X: pd.DataFrame):
+        self.transform_track = []
+        for x in X.to_dict(orient="records"):
+            self.learn_one(x)
+            self.transform_track.append(self.transform_one(x))
+
+    def transform_many(self, X: pd.DataFrame):
+        # if transform_track is empty, it means that the transform is called first
+        # so we need to learn the data first and reset the state
+        if not self.transform_track:
+            self.learn_many(X)
+            self._window.clear()
+        df = pd.DataFrame(self.transform_track)
+        self.transform_track = []
+        return df
 
 
 def normalize(x):
