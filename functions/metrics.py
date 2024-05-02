@@ -1,11 +1,9 @@
 """
-This module is part of library (tsad)[https://github.com/waico/tsad]
+This module is modified part of evaluation from library (tsad)[https://github.com/waico/tsad]
 """
 
 from typing import Any
 
-import matplotlib.gridspec as gridspec
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -573,6 +571,137 @@ def chp_score(
             - FPs, int
             - FNS, int
 
+    Examples
+    --------
+
+    >>> y_true = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+
+    >>> y_pre1 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    >>> y_pre2 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    >>> y_pre3 = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    >>> y_pre4 = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    >>> y_pre5 = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+
+
+    >>> def convert_comp(y):
+    ...     y_ = pd.Series(y)
+    ...     y_.index = pd.to_datetime(y_.index, unit="s")
+    ...     return y_
+
+
+    >>> y_true_ = convert_comp(y_true)
+    >>> for y_pred in [y_pre1, y_pre2, y_pre3, y_pre4, y_pre5]:
+    ...     print(f"{y_true}{y_pred}")
+    ...     y_pred = convert_comp(y_pred)
+    ...     print("=== Binary ===")
+    ...     chp_score(
+    ...         y_true_,
+    ...         y_pred,
+    ...         metric="binary",
+    ...     )
+    ...     print("=== Average time ===")
+    ...     chp_score(
+    ...         y_true_,
+    ...         y_pred,
+    ...         metric="average_time",
+    ...         window_width="3s",
+    ...         anomaly_window_destination="righter",
+    ...         portion=1,
+    ...     )
+    ...     print("=== NAB ===")
+    ...     chp_score(
+    ...         y_true_,
+    ...         y_pred,
+    ...         metric="nab",
+    ...         window_width="3s",
+    ...         anomaly_window_destination="righter",
+    ...         portion=1,
+    ...     )
+    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    === Binary ===
+    False Alarm Rate 0.0 %
+    Missing Alarm Rate 100.0 %
+    F1 metric 0.0
+    (0.0, 0.0, 100.0)
+    === Average time ===
+    Amount of true anomalies 1
+    A number of missed CPs = 1
+    A number of FPs = 0
+    Average time nan
+    (nan, 1, 0, 1)
+    === NAB ===
+    Standard  -  0.0
+    LowFP  -  0.0
+    LowFN  -  0.0
+    {'Standard': 0.0, 'LowFP': 0.0, 'LowFN': 0.0}
+    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    === Binary ===
+    False Alarm Rate 16.67 %
+    Missing Alarm Rate 100.0 %
+    F1 metric 0.0
+    (0.0, 16.67, 100.0)
+    === Average time ===
+    Amount of true anomalies 1
+    A number of missed CPs = 0
+    A number of FPs = 0
+    Average time 0 days 00:00:03
+    (Timedelta('0 days 00:00:03'), 0, 0, 1)
+    === NAB ===
+    Standard  -  44.5
+    LowFP  -  39.0
+    LowFN  -  63.0
+    {'Standard': 44.5, 'LowFP': 39.0, 'LowFN': 63.0}
+    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    === Binary ===
+    False Alarm Rate 16.67 %
+    Missing Alarm Rate 100.0 %
+    F1 metric 0.0
+    (0.0, 16.67, 100.0)
+    === Average time ===
+    Amount of true anomalies 1
+    A number of missed CPs = 1
+    A number of FPs = 1
+    Average time nan
+    (nan, 1, 1, 1)
+    === NAB ===
+    Standard  -  -5.5
+    LowFP  -  -11.0
+    LowFN  -  -3.67
+    {'Standard': -5.5, 'LowFP': -11.0, 'LowFN': -3.67}
+    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    === Binary ===
+    False Alarm Rate 100.0 %
+    Missing Alarm Rate 0.0 %
+    F1 metric 0.25
+    (0.25, 100.0, 0.0)
+    === Average time ===
+    Amount of true anomalies 1
+    A number of missed CPs = 0
+    A number of FPs = 3
+    Average time 0 days 00:00:00
+    (Timedelta('0 days 00:00:00'), 0, 3, 1)
+    === NAB ===
+    Standard  -  83.5
+    LowFP  -  67.0
+    LowFN  -  89.0
+    {'Standard': 83.5, 'LowFP': 67.0, 'LowFN': 89.0}
+    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+    === Binary ===
+    False Alarm Rate 0.0 %
+    Missing Alarm Rate 0.0 %
+    F1 metric 1.0
+    (1.0, 0.0, 0.0)
+    === Average time ===
+    Amount of true anomalies 1
+    A number of missed CPs = 0
+    A number of FPs = 0
+    Average time 0 days 00:00:00
+    (Timedelta('0 days 00:00:00'), 0, 0, 1)
+    === NAB ===
+    Standard  -  100.0
+    LowFP  -  100.0
+    LowFN  -  100.0
+    {'Standard': 100.0, 'LowFP': 100.0, 'LowFN': 100.0}
     """
 
     assert isinstance(true, pd.Series) or isinstance(true, list)
@@ -654,88 +783,6 @@ def chp_score(
                 detecting_boundaries[i] = [[]]
     else:
         raise Exception("Unknown format for true data")
-
-    # part 3. To compute metric
-    if plot_figure:
-        num_datasets = len(true)
-        if ((metric == "binary") or (metric == "confusion_matrix")) and (
-            input_variant == 1
-        ):
-            f = plt.figure(figsize=(16, 5 * num_datasets))
-            grid = gridspec.GridSpec(num_datasets, 1)
-            for i in range(num_datasets):
-                globals()["ax" + str(i)] = f.add_subplot(grid[i])
-                prediction[i].plot(
-                    ax=globals()["ax" + str(i)], label="pred", marker="o"
-                )
-                true[i].plot(  # type: ignore
-                    ax=globals()["ax" + str(i)], label="true", marker="o"
-                )
-                globals()["ax" + str(i)].legend()
-            plt.show()
-        else:
-            f = plt.figure(figsize=(16, 5 * num_datasets))
-            grid = gridspec.GridSpec(num_datasets, 1)
-            detalization = 100
-            for i in range(num_datasets):
-                globals()["ax" + str(i)] = f.add_subplot(grid[i])
-                print_legend_boundary = True
-
-                def plot_cp(couple, anomaly_window_destination, ax, label):
-                    if anomaly_window_destination == "lefter":
-                        ax.axvline(couple[1], c="r", label=label)
-                    elif anomaly_window_destination == "righter":
-                        ax.axvline(couple[0], c="r", label=label)
-                    elif anomaly_window_destination == "center":
-                        ax.axvline(
-                            couple[0] + ((couple[1] - couple[0]) / 2),
-                            c="r",
-                            label=label,
-                        )
-
-                for couple in detecting_boundaries[i]:
-                    if len(couple) > 0:
-                        globals()["ax" + str(i)].axvspan(
-                            couple[0],
-                            couple[1],
-                            alpha=0.5,
-                            color="green",
-                            label="detection \nboundary"
-                            if print_legend_boundary
-                            else None,
-                        )
-                        nab = pd.Series(
-                            my_scale(
-                                plot_figure=True, detalization=detalization
-                            ),
-                            index=pd.date_range(
-                                couple[0], couple[1], periods=detalization
-                            ),
-                        )
-                        nab.plot(
-                            ax=globals()["ax" + str(i)],
-                            linewidth=0.4,
-                            color="brown",
-                            label="nab scoring func"
-                            if print_legend_boundary
-                            else None,
-                        )
-                        plot_cp(
-                            couple,
-                            anomaly_window_destination,
-                            globals()["ax" + str(i)],
-                            label="Changepoint"
-                            if print_legend_boundary
-                            else None,
-                        )
-                        print_legend_boundary = False
-                    else:
-                        pass
-                prediction[i].plot(
-                    ax=globals()["ax" + str(i)], label="pred", marker="o"
-                )
-                globals()["ax" + str(i)].legend()
-            plt.show()
 
     if metric == "nab":
         matrix = np.zeros((3, 3))
