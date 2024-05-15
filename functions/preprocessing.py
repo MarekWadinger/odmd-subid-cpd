@@ -2,6 +2,64 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+from river.preprocessing import Hankelizer as H
+
+
+class Hankelizer(H):
+    """Mini-batch Hankelizer that keeps track of the transformation.
+
+    Similar to the original Hankelizer, it
+    The _memory_usage differs from the original Hankelizer due to storing the
+    transformation track which can be significant for large datasets.
+
+    Examples:
+    Using Mini-batch Hankelizer is equivalent to
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> from river.preprocessing import Hankelizer as H
+    >>> X_train = pd.DataFrame(np.random.rand(10, 2), columns=["a", "b"])
+    >>> hn = 3
+    >>> hankelizer = Hankelizer(hn)
+    >>> hankelizer_old = H(hn)
+
+    >>> hankelizer.learn_many(X_train)
+    >>> X_t_new = hankelizer.transform_many(X_train)
+    >>> X_t_old_ = []
+    >>> for j, x in enumerate(X_train.to_dict(orient="records")):
+    ...     hankelizer_old.learn_one(x)
+    ...     X_t_old_.append(hankelizer_old.transform_one(x))
+    >>> X_t_old = pd.DataFrame(X_t_old_)
+    >>> X_t_new.equals(X_t_old)
+    True
+
+    Calling transform_many first produces consistent behavior
+    >>> hankelizer = Hankelizer(hn)
+    >>> X_t_first = hankelizer.transform_many(X_train)
+    >>> X_t_first.equals(X_t_new)
+    True
+    """
+
+    def __init__(
+        self, w: int = 2, return_partial: bool | Literal["copy"] = "copy"
+    ):
+        super().__init__(w, return_partial)
+        self.transform_track: list[dict] = []
+
+    def learn_many(self, X: pd.DataFrame):
+        self.transform_track = []
+        for x in X.to_dict(orient="records"):
+            self.learn_one(x)
+            self.transform_track.append(self.transform_one(x))
+
+    def transform_many(self, X: pd.DataFrame):
+        # if transform_track is empty, it means that the transform is called first
+        # so we need to learn the data first and reset the state
+        if not self.transform_track:
+            self.learn_many(X)
+            self._window.clear()
+        df = pd.DataFrame(self.transform_track)
+        self.transform_track = []
+        return df
 
 
 def normalize(x):
@@ -11,6 +69,7 @@ def normalize(x):
 def hankel(
     X: np.ndarray | pd.DataFrame,
     hn: int,
+    step: int = 1,
     return_partial: bool | Literal["copy"] = "copy",
 ) -> np.ndarray | pd.DataFrame:
     """Create a Hankel matrix from a given input array.
@@ -18,6 +77,7 @@ def hankel(
     Args:
         X (np.ndarray): The input array.
         hn (int): The number of columns in the Hankel matrix.
+        step (int, optional): The step size for the delays. Defaults to 1.
         cut_rollover (bool, optional): Whether to cut the rollover part of the Hankel matrix. Defaults to True.
 
     Returns:
@@ -45,6 +105,13 @@ def hankel(
            [ 1.,  9.,  2.,  8.,  3.,  7.],
            [ 2.,  8.,  3.,  7.,  4.,  6.],
            [ 3.,  7.,  4.,  6.,  5.,  5.]])
+    >>> X = np.array([[1.0, 2.0, 3.0, 4.0, 5.0], [9.0, 8.0, 7.0, 6.0, 5.0]]).T
+    >>> hankel(X, 3, 2, return_partial=True)
+    array([[nan, nan, nan, nan,  3.,  7.],
+           [nan, nan,  2.,  8.,  4.,  6.],
+           [ 1.,  9.,  3.,  7.,  5.,  5.],
+           [ 2.,  8.,  4.,  6.,  1.,  9.],
+           [ 3.,  7.,  5.,  5.,  2.,  8.]])
     """
     if hn <= 1:
         return X
@@ -72,7 +139,7 @@ def hankel(
             ]
         elif return_partial and i / n < hn - 1:
             hX[: hn - int(i / n) - 1, i : i + n] = np.nan
-        X = np.roll(X, -1, axis=0)
+        X = np.roll(X, -step, axis=0)
     if not return_partial:
         hX = hX[hn - 1 :]
     if feature_names_in_ is not None:

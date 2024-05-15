@@ -115,13 +115,16 @@ def load_skab(file_path: str = "data/skab") -> dict[str, list[pd.DataFrame]]:
 
     if not os.path.exists(file_path):
 
-        def download_csv_from_git(url, save_path):
+        def download_csv_from_git(url, save_path, add_base: bool = True):
             # Parse the URL to get the folder name
             parsed_url = urlparse(url)
             folder_name = os.path.basename(parsed_url.path)
 
             # Create the folder if it doesn't exist
-            folder_path = os.path.join(save_path, folder_name)
+            if add_base:
+                folder_path = os.path.join(save_path, folder_name)
+            else:
+                folder_path = save_path
             os.makedirs(folder_path, exist_ok=True)
 
             # Get the contents of the folder
@@ -131,7 +134,7 @@ def load_skab(file_path: str = "data/skab") -> dict[str, list[pd.DataFrame]]:
                     if item["type"] == "file" and item["name"].endswith(
                         ".csv"
                     ):
-                        print(f"Downloading '{item['name']}'")
+                        print(f"Downloading {item['name']: <79s}", end="\r")
                         file_url = item["download_url"]
                         file_name = os.path.basename(p=file_url)
                         file_path = os.path.join(folder_path, file_name)
@@ -141,10 +144,10 @@ def load_skab(file_path: str = "data/skab") -> dict[str, list[pd.DataFrame]]:
                         download_csv_from_git(item["url"], folder_path)
 
         # Example usage
-        download_csv_from_git(url, file_path)
+        download_csv_from_git(url, file_path, add_base=False)
 
     # Recursively go through directories in file_path
-    data_dict = {}
+    data_dict: dict[str, list] = {}
     for root, _, files in os.walk(file_path):
         # Create a dictionary to store the data frames
         relative_path = os.path.relpath(root, file_path)
@@ -180,6 +183,19 @@ def load_usp(
                 "Feel free to contribute by implementing the download process."
             )
 
+    def convert_dtypes_numeric(df):
+        for col in df:
+            df[col] = df[col].map(
+                lambda x: x.decode("utf-8") if isinstance(x, bytes) else x
+            )
+            # We are only interested in ordinal numeric values
+            df[col] = df[col].map(
+                lambda x: float(x)
+                if isinstance(x, str) and x.isnumeric()
+                else x
+            )
+        return df
+
     # Recursively go through directories in file_path
     data_dict: dict[str, pd.DataFrame] = {}
     for root, _, files in os.walk(file_path):
@@ -187,10 +203,37 @@ def load_usp(
         if root != ".":
             for file in files:
                 if file.endswith(".arff"):
+                    print(f"=== Loading {file} ".ljust(79, "="), end="\r")
                     # Get the relative path of the file
                     # Create the corresponding directory structure in the dictionary
                     raw_data, meta = loadarff(os.path.join(root, file))
                     df = pd.DataFrame(raw_data, columns=meta.names())
                     # Store the data frame in the dictionary
                     data_dict[file.split(".")[0]] = df
+
+    # Rename the class column to "class" for consistency
+    data_dict["chess"] = data_dict["chess"].rename(
+        columns={"outcome": "class"}
+    )
+    data_dict["airlines"] = data_dict["airlines"].rename(
+        columns={"Delay": "class"}
+    )
+    data_dict["gassensor"] = data_dict["gassensor"].rename(
+        columns={"Class": "class"}
+    )
+    data_dict["ozone"] = data_dict["ozone"].rename(columns={"Class": "class"})
+
+    # Convert the data types to numeric
+    for k, df in data_dict.items():
+        print(f"=== Processing {k} ".ljust(79, "="), end="\r")
+        df = convert_dtypes_numeric(df)
+        gt = df["class"].copy(deep=True)
+        df = df.select_dtypes(include="number")
+        if "class" not in df.columns:
+            if any(gt.apply(lambda x: isinstance(x, str))):
+                df["class"] = gt.astype("category").cat.codes
+            else:
+                df["class"] = gt
+        df.index = pd.to_datetime(df.index, unit="s")
+        data_dict[k] = df
     return data_dict
