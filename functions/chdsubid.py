@@ -8,7 +8,6 @@ from river.anomaly.base import AnomalyDetector
 from river.base import MiniBatchTransformer, Transformer
 from river.decomposition import OnlineDMD, OnlineDMDwC
 
-from .preprocessing import hankel
 from .rolling import Rolling
 
 
@@ -32,7 +31,7 @@ def get_default_rank(X):
     return r
 
 
-def get_default_params(X, window_size: int):
+def get_default_params(X, window_size: int, max_rank=10):
     """Get default parameters for the given dataset and window size
     Args:
         X (np.ndarray): Data matrix
@@ -48,9 +47,9 @@ def get_default_params(X, window_size: int):
     test_size = window_size
     # Optimal low-rank representation of signal with unknown noise variance
     if hn * X.shape[1] < 100:
-        r = get_default_rank(hankel(X[:window_size], hn))
+        r = min(get_default_rank(X), max_rank)
     else:
-        r = 10
+        r = max_rank
     return window_size, hn, ref_size, test_size, r
 
 

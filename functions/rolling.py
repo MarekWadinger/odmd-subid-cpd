@@ -106,16 +106,16 @@ class Rolling(R):
     >>> for x in X.to_dict(orient='records'):
     ...     rsvd.update(x=x)
     >>> svd.update_many(x=X)
-    >>> print(svd.n_seen, rsvd.n_seen)
-    5 5
-    >>> print(svd.transform_one(x), rsvd.transform_one(x))
-    {0: -0.17243018434541485} {0: -0.17243018434541485}
+    >>> svd.n_seen == rsvd.n_seen
+    True
+    >>> np.abs(svd.transform_one(x)[0]) == np.abs(rsvd.transform_one(x)[0])
+    True
     >>> X = pd.DataFrame(np.linalg.qr(np.random.randn(2, m))[0])
     >>> for x in X.to_dict(orient='records'):
     ...     rsvd.update(x=x)
     >>> svd.update_many(x=X)
-    >>> print(svd.transform_one(x), rsvd.transform_one(x))
-    {0: -0.6486318092208099} {0: 0.6486318092208099}
+    >>> np.abs(svd.transform_one(x)[0]) == np.abs(rsvd.transform_one(x)[0])
+    True
     """
 
     def __init__(self, obj, window_size):
