@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 import pandas as pd
 from river.utils.rolling import Rolling as R
@@ -30,10 +32,10 @@ def separate_args_kwargs(list_of_tuples):
     0  5  6
     1  7  8})
     """
-    args_ = []
-    kwargs_ = {}
+    args_: list[Any] = []
+    kwargs_: dict[str | int, Any] = {}
     args_types = []
-    kwargs_types = []
+    kwargs_types: dict[str | int, type] = {}
     # Extracting args
     for tpl in list_of_tuples:
         # Infer the types based on first tpl
@@ -52,7 +54,7 @@ def separate_args_kwargs(list_of_tuples):
 
     args_ = list(map(list, zip(*args_)))
 
-    args__ = []
+    args__: list[np.ndarray | pd.DataFrame] = []
     for i, arg in enumerate(args_):
         if issubclass(args_types[i], np.ndarray):
             args__.append(np.array(arg))
@@ -61,7 +63,7 @@ def separate_args_kwargs(list_of_tuples):
         else:
             args__.append(arg)
 
-    kwargs__ = {}
+    kwargs__: dict[str | int, np.ndarray | pd.DataFrame] = {}
     for k, kwarg in kwargs_.items():
         if issubclass(kwargs_types[k], np.ndarray):
             kwargs__[k] = np.array(kwarg)

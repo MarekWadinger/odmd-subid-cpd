@@ -2,10 +2,10 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
-from river.preprocessing import Hankelizer
+from river.preprocessing import Hankelizer as H
 
 
-class Hankelizer(Hankelizer):
+class Hankelizer(H):
     """Mini-batch Hankelizer that keeps track of the transformation.
 
     Similar to the original Hankelizer, it

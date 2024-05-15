@@ -147,7 +147,7 @@ def load_skab(file_path: str = "data/skab") -> dict[str, list[pd.DataFrame]]:
         download_csv_from_git(url, file_path, add_base=False)
 
     # Recursively go through directories in file_path
-    data_dict = {}
+    data_dict: dict[str, list] = {}
     for root, _, files in os.walk(file_path):
         # Create a dictionary to store the data frames
         relative_path = os.path.relpath(root, file_path)
@@ -230,7 +230,7 @@ def load_usp(
         gt = df["class"].copy(deep=True)
         df = df.select_dtypes(include="number")
         if "class" not in df.columns:
-            if any(gt.apply(type) == str):
+            if any(gt.apply(lambda x: isinstance(x, str))):
                 df["class"] = gt.astype("category").cat.codes
             else:
                 df["class"] = gt
