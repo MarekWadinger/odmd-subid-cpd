@@ -147,16 +147,6 @@ class SubIDChangeDetector(AnomalyDetector):
         self._X.append(x)
 
         learn_delay = self.time_lag + self.test_size
-        # Learn the model if data past the time lag and test size is availabe
-        # If learn_after_grace is False learn only when grace period is not yet over
-        if len(self._X) > learn_delay and (
-            self.learn_after_grace or self.n_seen < self.grace_period
-        ):
-            if isinstance(self.subid, Rolling):
-                self.subid.update(self._X[-learn_delay - 1], **params)
-            else:
-                self.subid.learn_one(self._X[-learn_delay - 1], **params)
-        self.n_seen += 1
 
         # Do inference after grace period and enough data is available
         if (
@@ -194,6 +184,17 @@ class SubIDChangeDetector(AnomalyDetector):
         else:
             self.score = 0.0
             self._drift_detected = False
+
+        # Learn the model if data past the time lag and test size is availabe
+        # If learn_after_grace is False learn only when grace period is not yet over
+        if len(self._X) > learn_delay and (
+            self.learn_after_grace or self.n_seen < self.grace_period
+        ):
+            if isinstance(self.subid, Rolling):
+                self.subid.update(self._X[-learn_delay - 1], **params)
+            else:
+                self.subid.learn_one(self._X[-learn_delay - 1], **params)
+        self.n_seen += 1
 
     def learn_one(self, x: dict, **params) -> None:
         """Allias for update method for interoperability with Pipeline."""

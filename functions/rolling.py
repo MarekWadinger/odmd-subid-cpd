@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from river.utils.rolling import Rolling
+from river.utils.rolling import Rolling as R
 
 
 def separate_args_kwargs(list_of_tuples):
@@ -73,7 +73,7 @@ def separate_args_kwargs(list_of_tuples):
     return args__, kwargs__
 
 
-class Rolling(Rolling):
+class Rolling(R):
     """A generic wrapper for performing rolling computations.
 
     This can be wrapped around any object which implements both an `update` and a `revert` method.
