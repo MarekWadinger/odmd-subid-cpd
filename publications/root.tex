@@ -1,0 +1,142 @@
+\documentclass[preprint,12pt,authoryear]{elsarticle}
+
+%% The amssymb package provides various useful mathematical symbols
+\usepackage{amssymb}
+%% The amsmath package provides various useful equation environments.
+\usepackage{amsmath}
+%% The interval package provides the \interval command
+\usepackage{interval}
+\intervalconfig{
+soft open fences, separator symbol=;,
+}
+%% The algorithms
+\usepackage{algorithm}
+\usepackage{algorithmic}
+%% The images
+\usepackage{graphicx}
+%% Verbatim with URL-sensitive line breaks
+\usepackage{url}
+
+%% The lineno packages adds line numbers. Start line numbering with
+%% \begin{linenumbers}, end it with \end{linenumbers}. Or switch it on
+%% for the whole article with \linenumbers.
+\usepackage{lineno}
+
+% upright sub-index
+\newcommand{\ui}[2]{#1 _{\text{#2}}}
+% upright sub-index with variable
+\newcommand{\uis}[3]{#1 _{\text{#2}, #3}}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\journal{Engineering Applications of Artificial Intelligence}
+
+\begin{document}
+
+\begin{frontmatter}
+
+	%% Title, authors and addresses
+
+	\title{Change-Point Detection in Industrial Data Streams based on Online DMD with Control}
+
+	\author[aff1,aff2]{Marek Wadinger\corref{cor1}}
+	\ead{marek.wadinger@stuba.sk}
+	\cortext[cor1]{\textit{URL:} \url{uiam.sk/~wadinger} (Marek Wadinger)}
+	% TODO: Center the tilde vertically
+
+	\author[aff1]{Michal Kvasnica}
+	\ead{michal.kvasnica@stuba.sk}
+
+	\author[aff2]{Yoshinobu Kawahara}
+	\ead{kawahara@ist.osaka-u.ac.jp}
+
+	\affiliation[aff1]{organization={Institute of Information Engineering, Automation and Mathematics, Slovak University of Technology in Bratislava},
+		addressline={Radlinskeho 9},
+		postcode={812 37},
+		state={Bratislava},
+		country={Slovakia}
+	}
+
+	\affiliation[aff2]{organization={Machine Learning \& Systems Laboratory, Osaka University},
+		addressline={1--5 Yamadaoka},
+		postcode={565--0871},
+		state={Suita, Osaka},
+		country={Japan}
+	}
+
+	%% Abstract
+	\begin{abstract}
+		%% Text of abstract
+		\input{sections/abstract.tex}
+	\end{abstract}
+
+	%%Graphical abstract
+	\begin{graphicalabstract}
+		%\includegraphics[width=\linewidth]{figures/....pdf}
+	\end{graphicalabstract}
+
+	%%Research highlights
+	\begin{highlights}
+		\item Trunced online extended DMD with control (TOE-DMDc) is proposed.
+		\item Improved change-point detection is reached using TOE-DMDc.
+		\item Adaptation and robustness is achieved using self-supervised.
+		\item Intuitive and streamlined hyperparameter selection based on history replay.
+		\item Application to non-linear time-varying controlled systems with delay.
+	\end{highlights}
+
+
+	%% Keywords
+	\begin{keyword}
+		%% keywords here, in the form: keyword \sep keyword
+
+		%% PACS codes here, in the form: \PACS code \sep code
+
+		%% MSC codes here, in the form: \MSC code \sep code
+		%% or \MSC[2008] code \sep code (2000 is the default)
+
+	\end{keyword}
+
+\end{frontmatter}
+
+\linenumbers{}
+
+%% main text
+\section{Introduction}\label{sec:introduction}
+% \input{sections/introduction.tex}
+
+\section{Preliminaries}\label{sec:preliminaries}
+\input{sections/preliminaries.tex}
+
+\clearpage
+\section{Method}\label{sec:method}
+\input{sections/method.tex}
+
+\clearpage
+\section{Results}\label{sec:results}
+% \input{sections/results.tex}
+
+\section{Conclusions}\label{sec:conclusions}
+% \input{sections/conclusions.tex}
+
+\section*{Notation}
+\input{sections/notation.tex}
+
+\section*{Additional information}
+Our code is openly accessible on GitHub at the following URL:~\url{https://github.com/MarekWadinger/odmd-subid-cpd}.
+
+\section*{CRediT authorship contribution statement}
+\textbf{Marek Wadinger:} Conceptualization; Data curation; Formal analysis; Investigation; Methodology; Resources; Software; Validation; Visualization; Writing --- original draft; and Writing --- review \& editing.~\textbf{Michal Kvasnica:} Funding acquisition; Resources; Supervision; Validation~\textbf{Yoshinobu Kawahara:} Conceptualization; Funding acquisition; Project administration; Resources; Supervision; Validation.
+
+\section*{Declaration of Competing Interest}
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+\section*{Acknowledgements}
+The authors gratefully acknowledge the contribution of the Program to support young researchers under the project Adaptive and Robust Change Detection for Enhanced Reliability in Intelligent Systems. The authors gratefully acknowledge the contribution of the Scientific Grant Agency of the Slovak Republic under the grant 1/0490/23 and grant VEGA 1/0691/21. This research is funded by the Horizon Europe under the grant no. 101079342 (Fostering Opportunities Towards Slovak Excellence in Advanced Control for Smart Industries).
+
+\bibliographystyle{elsarticle-harv}
+\bibliography{main}
+
+\end{document}
+
+\endinput

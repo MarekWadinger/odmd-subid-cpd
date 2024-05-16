@@ -64,3 +64,5 @@ config.ini
 *.synctex.gz(busy)*
 *.synctex.gz([0-9])
 *.synctex.gz([0-9])*
+*.spl
+*.bak0

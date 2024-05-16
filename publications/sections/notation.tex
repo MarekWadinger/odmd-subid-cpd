@@ -1,0 +1,46 @@
+\begin{table}[H]
+	\begin{tabular}{p{2cm}l}
+		% \(^+\)                         & Moore-Penrose pseudoinverse                                       \\
+		% \(^\top \)                     & matrix transpose                                                  \\
+		% \(^{-1}\)                      & matrix inverse                                                    \\
+		\(|| . ||_F\)                  & Frobenius norm                                                    \\
+		\(A\)                          & state matrix                                                      \\
+		\(A_i\)                        & state matrix at \(i\)-th snapshot                                 \\
+		\(\tilde{A}\)                  & state matrix projected on POD                                     \\
+		\(\bar{A}_i\)                  & augumented state and control matrix at \(i\)-th snapshot          \\
+		\(B\)                          & input matrix                                                      \\
+		\(B_i\)                        & input matrix at \(i\)-th snapshot                                 \\
+		\(c\)                          & number of new snaphots                                            \\
+		\(C\)                          & diagonal weights matrix of data matrix                            \\
+		\(k\)                          & snapshot index                                                    \\
+		\(\lambda \)                   & eigenvalue                                                        \\
+		\(\Lambda \)                   & diagonal matrix of eigenvalues                                    \\
+		\(m\)                          & number of states                                                  \\
+		\(l\)                          & number of control inputs                                          \\
+		\(r\)                          & number of modes                                                   \\
+		\(q\)                          & rank of the reduced-order control matrix                          \\
+		\(p\)                          & rank of the reduced-order state matrix                            \\
+		\(X\)                          & matrix of states                                                  \\
+		\(X_i\)                        & matrix of states at \(i\)-th snapshot                             \\
+		\(X'_i\)                       & matrix of states at \((i+1)\)-th snapshot                         \\
+		\(\tilde{X}_i\)                & projected matrix of states at \(i\)-th snapshot                   \\
+		\(\bar{X}_i\)                  & matrix of states and controls at \(i\)-th snapshot                \\
+		\(\theta \)                    & input at \(i\)-th snapshot                                        \\
+		\(\Theta \)                    & input matrix at \(i\)-th snapshot                                 \\
+		\(x_i\)                        & state at \(i\)-th snapshot                                        \\
+		\(\tilde{U}\)                  & left singular vectors                                             \\
+		\(\tilde{V}\)                  & right singular vectors                                            \\
+		\(\ui{\tilde{\bar{X}}}{buff}\) & buffer of projected augumented matrices of states                 \\
+		\(\tilde{\Sigma} \)            & singular values                                                   \\
+		\(\Phi \)                      & DMD modes                                                         \\
+		\( W \)                        & eigenvectors                                                      \\
+		\(P_i\)                        & precision matrix at \(i\)-th snapshot                             \\
+		\(E\)                          & error between matrix of states and their reconstructed projection \\
+		\(E'\)                         & orthonormal basis of state projection error matrix                \\
+		\(\ui{K}{E'E}\)                & covariance of orthonormal basis and state projection error matrix \\
+		\(Q_i\)                        & lag covariance matrix of snapshots pair at \(i\)-th snapshot      \\
+		\(\Gamma \)                    & covariance matrix of posterior distribution                       \\
+		\(\textbf{I}_{r \times r}\)    & identity matrix of shape \(r \times r\)                           \\
+		\(\mathbf{0}_{r \times r}\)    & zeros matrix of shape \(r \times r\)                              \\
+	\end{tabular}
+\end{table}
