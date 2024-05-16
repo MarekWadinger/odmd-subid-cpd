@@ -197,7 +197,7 @@ The new snapshots \(\bar{X}_{k+c}\) may be used for updating the Online SVD as s
 		\(U_0 = \textbf{I}_{r}\);
 		\(\tilde{\bar{X}}_k = \tilde{U}^\top \bar{X}_{k+c}\);
 		\(E = \bar{X}_{k+c} - \tilde{U} \tilde{\bar{X}}_k\);
-		\(E^\prime, \_ \leftarrow \text{qr}(E) \);
+		\(E^\prime, \_ \gets \text{qr}(E) \);
 		\(\ui{K}{E'E} = E^{\prime \top} E\);
 		}
 		\IF{\(\ui{K}{E'E} < tol\)}
@@ -232,7 +232,7 @@ The new snapshots \(\bar{X}_{k+c}\) may be used for updating the Online SVD as s
 		\IF{\(|E^{\prime\top} \tilde{U}(:, 0)| > tol\)}
 		\STATE{
 			\(E^\prime = E^\prime - \tilde{U}\tilde{U}^\top E^\prime \);
-			\(E^\prime, \_ \leftarrow \text{qr}(E^\prime) \);
+			\(E^\prime, \_ \gets \text{qr}(E^\prime) \);
 		}
 		\ENDIF{}
 		\STATE{
@@ -288,7 +288,7 @@ The new snapshots \(\bar{X}_{k+c}\) may be used for updating the Online SVD as s
 		\(B = \begin{bmatrix} \mathbf{0}_{k \times c}  \\ \textbf{I}_{c\times c}\end{bmatrix}\);
 		\(N = \tilde{V}^\top (:, :c)\);
 		\(E = B - \tilde{V} N\);
-		\(E^\prime, \_ \leftarrow \text{qr}(E) \);
+		\(E^\prime, \_ \gets \text{qr}(E) \);
 		\(\ui{K}{E'E} = E^{\prime\top} E\);
 		}
 		\IF{\(\ui{K}{E'E} < tol\)}
@@ -301,7 +301,7 @@ The new snapshots \(\bar{X}_{k+c}\) may be used for updating the Online SVD as s
 			\(B = \begin{bmatrix} \mathbf{0}_{k \times c + \ui{q}{r}}  \\ \textbf{I}_{c+ \ui{q}{r} \times c + \ui{q}{r}}\end{bmatrix}\);
 			\(N = \tilde{V}^\top (:, :c + \ui{q}{r})\);
 			\(E = B - \tilde{V} N\);
-			\(E^\prime, \_ \leftarrow \text{qr}(E) \);
+			\(E^\prime, \_ \gets \text{qr}(E) \);
 		}
 		\ENDIF{}
 		\STATE{

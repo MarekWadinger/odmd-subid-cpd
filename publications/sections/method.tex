@@ -13,213 +13,189 @@ Efficient execution of the algorithm requires preprocessing incoming data stream
 Four parameters \(a, b, c, d\) define three required snapshot sets; the base set \({\ui{\bar{X}}{B} = \{x_h(t_i)\}}^{k - b - c}_{i=k - a - b - c}\), the test set \(\ui{\bar{X}}{T} = {\{x_h(t_i)\}}^{k}_{i=k - c}\), and the learning pair \( \{\ui{\bar{X}}{L}, \ui{\bar{X}^\prime}{L}\} = {\{x_h(t_i), x_h(t_i^\prime )\}}^{k - b - c + j}_{i=k - b - c - d}\). Conveniently, storing snapshots pair \( \{\ui{\bar{X}}{all}, \ui{\bar{X}^\prime}{all}\} = {\{x_h(t_i), x_h(t_i^\prime )\}}^{k}_{i=k - b - c - d}\) is sufficient to manage all required data efficiently. In Section~\ref{sec:guidelines}, we will explain the selection of these parameters.
 
 \begin{algorithm}
-	% Need to use ^\prime in place of ' for valid indentation
-	\caption{Single pass of data preprocessing and managing procedure}\label{alg:preprocessing}
-	\begin{algorithmic}[1]
-		\REQUIRE{
-			\(X_{k: k + j}\),
-			\(X^\prime_{k: k + j}\),
-			\(\Theta_{k: k + j}\),
-			\(\ui{\bar{X}}{all}\),
-			\(\ui{\bar{X}^\prime}{all}\),
-			\(h\),
-			\(B\),
-			\(a, b, c, d\)}
-		\ENSURE{
-			\(\ui{\bar{X}}{L}\),
-			\(\ui{\bar{X}^\prime}{L}\),
-			\(\ui{\bar{X}}{B}\),
-			\(\ui{\bar{X}}{T}\),
-			\(\ui{\bar{X}}{all}\),
-			\(\ui{\bar{X}^\prime}{all}\),
-			\(j\)
-		}
-		\STATE{\(j \gets \text{number of snapshots in } X_{k: k + j} \)}
-		\STATE{
-			\(X_{h, k: k + j} \leftarrow \text{hankelize}(X_{k: k + j}, h) \)
-		}
-		\STATE{
-			\(X^\prime_{h, k: k + j} \leftarrow \text{hankelize}(X^\prime_{k: k + j}, h) \)
-		}
-		\STATE{
-			\(\Theta_{h, k: k + j} \leftarrow \text{hankelize}(\Theta_{k: k + j}, h) \)
-		}
-		\IF{B is known}
-		\STATE{
-			\(\bar{X}_{h, k: k + j} \gets X_{h, k: k + j} \)
-		}
-		\STATE{
-			\(\bar{X}^\prime_{h, k: k + j} \gets X^\prime_{h, k: k + j} - B \Theta_{h, k: k + j}\)
-		}
-		\COMMENT{Eq.~\eqref{eq:control-compensation}}
-		\ELSIF{B is not known}
-		\STATE{
-			\(\bar{X}_{h, k: k + j} \gets \begin{bmatrix}
-				X_{h, k: k + j} \\ \Theta_{h, k: k + j}
-			\end{bmatrix} \)
-		}
-		\COMMENT{Eq.~\eqref{eq:augmented-matrix}}
-		\STATE{
-			\(\bar{X}^\prime_{h, k: k + j} \gets X^\prime_{h, k: k + j}\)
-		}
-		\ENDIF{}
-		\STATE{
-			\(\ui{\bar{X}}{L} \leftarrow \ui{\bar{X}}{all}(k - b - c - d: k - b - c + j) \)
-		}
-		\STATE{
-			\(\ui{\bar{X}^\prime}{L} \leftarrow \ui{\bar{X}^\prime}{all}(k - b - c - d: k - b - c + j) \)
-		}
-		\STATE{
-			\(\ui{\bar{X}}{all} \leftarrow  \begin{bmatrix}
-				\ui{\bar{X}}{all}(j: k) & \bar{X}_{h, k: k + j}
-			\end{bmatrix}\)
-		}
-		\STATE{
-			\(\ui{\bar{X}^\prime}{all} \leftarrow  \begin{bmatrix}
-				\ui{\bar{X}^\prime}{all}(j: k) & \bar{X}^\prime_{h, k: k + j}
-			\end{bmatrix}\)
-		}
-		\STATE{
-			\(\ui{\bar{X}}{B} \leftarrow \ui{\bar{X}}{all}(k - a - b - c: k - b - c) \)
-		}
-		\STATE{
-			\(\ui{\bar{X}}{T} \leftarrow \ui{\bar{X}}{all}(k - c: k) \)
-		}
-	\end{algorithmic}
+    \caption{Single pass of data preprocessing and management procedure}\label{alg:preprocessing}
+    \begin{algorithmic}[1]
+        \REQUIRE{
+            \(X_{k: k + j}\), % Incoming snapshots
+            \(X^\prime_{k: k + j}\), % One-step delayed snapshots
+            \(\Theta_{k: k + j}\), % Control actions
+            \(\ui{\bar{X}}{all}\), % Stored snapshots
+            \(\ui{\bar{X}^\prime}{all}\), % Stored delayed snapshots
+            \(h\), % Number of delays
+            \(B\), % Control matrix
+            \(a, b, c, d\) % Parameters defining snapshot sets
+        }
+        \ENSURE{
+            \(\ui{\bar{X}}{L}\), % Learning snapshots
+            \(\ui{\bar{X}^\prime}{L}\), % Learning delayed snapshots
+            \(\ui{\bar{X}}{B}\), % Base snapshots
+            \(\ui{\bar{X}}{T}\), % Test snapshots
+            \(\ui{\bar{X}}{all}\), % Updated stored snapshots
+            \(\ui{\bar{X}^\prime}{all}\), % Updated stored delayed snapshots
+            \(j\) % Number of snapshots
+        }
+
+        \STATE{\(j \gets \text{number of snapshots in } X_{k: k + j}\)}
+
+        \STATE{\(X_{h, k: k + j} \gets \text{hankelize}(X_{k: k + j}, h)\)}
+        \STATE{\(X^\prime_{h, k: k + j} \gets \text{hankelize}(X^\prime_{k: k + j}, h)\)}
+        \STATE{\(\Theta_{h, k: k + j} \gets \text{hankelize}(\Theta_{k: k + j}, h)\)}
+
+        \IF{\(B\) is known}
+        \STATE{\(\bar{X}_{h, k: k + j} \gets X_{h, k: k + j}\)}
+        \STATE{\(\bar{X}^\prime_{h, k: k + j} \gets X^\prime_{h, k: k + j} - B \Theta_{h, k: k + j}\)}
+        \COMMENT{Eq.~\eqref{eq:control-compensation}}
+        \ELSE{}
+        \STATE{\(\bar{X}_{h, k: k + j} \gets \begin{bmatrix} X_{h, k: k + j} \\ \Theta_{h, k: k + j} \end{bmatrix}\)}
+        \COMMENT{Eq.~\eqref{eq:augmented-matrix}}
+        \STATE{\(\bar{X}^\prime_{h, k: k + j} \gets X^\prime_{h, k: k + j}\)}
+        \ENDIF{}
+
+        \STATE{\(\ui{\bar{X}}{L} \gets \ui{\bar{X}}{all}(k - b - c - d: k - b - c + j)\)}
+        \STATE{\(\ui{\bar{X}^\prime}{L} \gets \ui{\bar{X}^\prime}{all}(k - b - c - d: k - b - c + j)\)}
+
+        \STATE{\(\ui{\bar{X}}{all} \gets \begin{bmatrix} \ui{\bar{X}}{all}(j: k) & \bar{X}_{h, k: k + j} \end{bmatrix}\)}
+        \STATE{\(\ui{\bar{X}^\prime}{all} \gets \begin{bmatrix} \ui{\bar{X}^\prime}{all}(j: k) & \bar{X}^\prime_{h, k: k + j} \end{bmatrix}\)}
+
+        \STATE{\(\ui{\bar{X}}{B} \gets \ui{\bar{X}}{all}(k - a - b - c: k - b - c)\)}
+        \STATE{\(\ui{\bar{X}}{T} \gets \ui{\bar{X}}{all}(k - c: k)\)}
+    \end{algorithmic}
 \end{algorithm}
+
 
 \subsection{Learning Procedure}\label{learn-cpd}
-From the data management perspective, the learning procedure represents informing the model the new snapshots in process of updating DMD and forgetting the old snapshots  in process of reverting DMD to track the time-varying characteristics of the system. The learning procedure is shown in Algorithm~\ref{alg:learning}.
+The learning procedure involves updating the Dynamic Mode Decomposition (DMD) model with new snapshots and forgetting old ones to track the system's time-varying characteristics. This procedure is outlined in Algorithm~\ref{alg:learning}.
 
 \begin{algorithm}
-	\caption{Single pass of learning procedure of CPD-DMD}\label{alg:learning}
-	\begin{algorithmic}[1]
-		\REQUIRE{
-			\(\ui{\bar{X}}{L}\),
-			\(\ui{\bar{X}^\prime}{L}\),
-			\(c\),
-			\(j\)
-		}
-		% \ENSURE{\(\Phi \)}
-		\STATE{\(\tilde{c} \gets \text{number of snapshots in } \ui{\bar{X}}{L} \)}
-		\STATE{\(j^\prime \gets \tilde{c} + j - c \)}
-		\COMMENT{\(\tilde{c} \leq c\) smaller before fully loaded}
-		\IF{\(j^\prime > 0\)}
-		\STATE{\textbf{Revert:} DMD\( (
-			-\ui{\bar{X}}{L}(: j^\prime),
-			-\ui{\bar{X}^\prime}{L}(: j^\prime)
-			) \)}
-		\COMMENT{Eq.~\eqref{eq:precision-matrix-update},~\eqref{eq:online-dmd-update}}
-		\ENDIF{}
-		\STATE{\textbf{Update:} DMD\( (
-			\ui{\bar{X}}{L}(- j: ),
-			\ui{\bar{X}^\prime}{L}(- j: )
-			) \)}
-		\COMMENT{Eq.~\eqref{eq:precision-matrix-update},~\eqref{eq:online-dmd-update}}
-		% \STATE{\(\Phi \leftarrow \text{DMD}()\) \COMMENT{retrieve full modes}}
-	\end{algorithmic}
+    \caption{Single pass of learning procedure of CPD-DMD}\label{alg:learning}
+    \begin{algorithmic}[1]
+        \REQUIRE{
+            \(\ui{\bar{X}}{L}\),
+            \(\ui{\bar{X}^\prime}{L}\),
+            \(c\),
+            \(j\)
+        }
+        % \ENSURE{\(\Phi \)}
+        \STATE{\(\tilde{c} \gets \text{number of snapshots in } \ui{\bar{X}}{L} \)}
+        \STATE{\(j^\prime \gets \tilde{c} + j - c \)}
+        \COMMENT{\(\tilde{c} \leq c\) smaller before fully loaded}
+        \IF{\(j^\prime > 0\)}
+        \STATE{\textbf{Revert:} DMD\( (
+            -\ui{\bar{X}}{L}(: j^\prime),
+            -\ui{\bar{X}^\prime}{L}(: j^\prime)
+            ) \)}
+        \COMMENT{Eq.~\eqref{eq:precision-matrix-update},~\eqref{eq:online-dmd-update}}
+        \ENDIF{}
+        \STATE{\textbf{Update:} DMD\( (
+            \ui{\bar{X}}{L}(- j: ),
+            \ui{\bar{X}^\prime}{L}(- j: )
+            ) \)}
+        \COMMENT{Eq.~\eqref{eq:precision-matrix-update},~\eqref{eq:online-dmd-update}}
+        % \STATE{\(\Phi \leftarrow \text{DMD}()\) \COMMENT{retrieve full modes}}
+    \end{algorithmic}
 \end{algorithm}
 
-Firstly, we check the number of snapshots in the learning set and revert the DMD subspace if the learning set is fully loaded. We emphasize that the learning set may not be full at the beginning of the learning procedure but must contain at least \((m + l) * h\) snapshots, under the assumption that measurements are unique and learning set \(\ui{\bar{X}}{L}\) has full column rank. Secondly, we update the DMD subspace with the new snapshots entering the learning set. The learning procedure is repeated for each snapshot pair available or in mini-batches whose frequency and size may not be uniform. It is governed by the upstream message queuing service.
+Initially, we verify the number of snapshots in the learning set and revert the DMD subspace if the learning set is fully loaded. Note that the learning set might not be full at the start of the learning procedure but must contain at least \((m + l) \times h\) snapshots, assuming unique measurements and that the learning set \(\ui{\bar{X}}{L}\) has full column rank. Subsequently, we update the DMD subspace with new snapshots entering the learning set. This procedure is repeated for each snapshot pair available or in mini-batches, whose frequency and size may not be uniform, governed by the upstream message queuing service.
 
 \subsection{Detection Procedure}\label{detect-cpd}
-The detection procedure is executed before the learning procedure and is responsible for computing the change-point statistics. The reason for preceeding the learning is that the new snapshots may represent transient dynamics, and the DMD subspace may account for the new dynamics in the learning procedure, potentially resulting in false negative identification. In practice, the impact of changed order is negligible for rank-one updates, as the learning procedure is executed in the same pass as the detection procedure. Nevertheless, its importance grows with the relative size of the mini-batch to the potential span of the change-point and is a common practice to prevent information leaks in all machine learning tasks.
+The detection procedure, executed before the learning procedure, computes the change-point statistics. This sequence is crucial to avoid false negatives, as new snapshots may represent transient dynamics, and updating the DMD subspace beforehand could result in misidentification. Although the impact of this sequence is minimal for rank-one updates since both procedures are executed in the same pass, its importance grows with the relative size of the mini-batch to the potential span of the change-point, aligning with best practices to prevent information leaks in machine learning tasks.
 
-The detection procedure is shown in Algorithm~\ref{alg:detection}. In the first step, we project the base and test matrices to the DMD subspace. In the second step, we reconstruct the full state representation and compute the sum of the squared Euclidean distances between the data and their DMD reconstruction. In the third step, we normalize the sum of the squared Euclidean distances by the number of snapshots in the matrices. In the fourth step, we compute the proportion of the errors between the base and test matrices. The change-point statistics are computed as the proportion of the errors between the test and base matrices. In cases where the error is smaller than 1, the reconstructed test set \(\ui{\tilde{\bar{X}}}{T}\) captures more information about \(\ui{\bar{X}}{T}\) than the reconstructed base set \(\ui{\tilde{\bar{X}}}{B}\) about \(\ui{\bar{X}}{B}\). This scenario occurs in rare parametrizations or values approaching one from the left side in case that the signal is stationary but the noise variance decreased in the test set comparing to train set. Although this phenomenon captures interesting information about noise and the end of the transient regime state, we do not consider this case in this paper and truncate the value to 1. We further normalize the score to zero, defining the minimum energy of matching errors.
+Algorithm~\ref{alg:detection} details the detection procedure. First, we project the base and test matrices onto the DMD subspace. Second, we reconstruct the full state representation and calculate the sum of squared Euclidean distances between the data and their DMD reconstruction. Third, we normalize this sum by the number of snapshots in the matrices. Finally, we compute the change-point statistics as the proportion of errors between the test and base matrices.
 
+In cases where the error proportion is less than 1, the reconstructed test set \(\ui{\tilde{\bar{X}}}{T}\) captures more information about \(\ui{\bar{X}}{T}\) than the reconstructed base set \(\ui{\tilde{\bar{X}}}{B}\) about \(\ui{\bar{X}}{B}\). This rare scenario typically occurs when the signal is stationary but the noise variance decreases in the test set compared to the training set. Although this phenomenon is interesting as it indicates noise and the end of transient regime states, it is not considered in this paper, and we truncate the value to 1 and shift the score to zero, defining the minimum energy of matching errors.
 
 \begin{algorithm}
-	\caption{Single pass of detection procedure of CPD-DMD}\label{alg:detection}
-	\begin{algorithmic}[1]
-		\REQUIRE{
-			\(\ui{\bar{X}}{B}\),
-			\(\ui{\bar{X}}{T}\),
-		}
-		\ENSURE{
-			\(Q_k\)
-		}
-		\STATE{\(
-			\ui{\tilde{\bar{X}}}{B} \gets \Phi^T \ui{\bar{X}}{B},
-			\ui{\tilde{\bar{X}}}{T} \gets \Phi^T \ui{\bar{X}}{T}
-			\)
-		}
-		\COMMENT{Eq.~\eqref{eq:full-dmd-modes}}
-		\STATE{\(
-			\ui{E}{B} \gets \sum_{i = k - a - b - c}^{k - b - c} \left \| \uis{\bar{X}}{B}{i} - \Phi \uis{\tilde{\bar{X}}}{B}{i} \right \|_F^2,
-			\ui{E}{T} \gets \sum_{i = k - c}^{k} \left \| \ui{\bar{X}}{T} - \Phi \uis{\tilde{\bar{X}}}{T}{i} \right \|_F^2.
-			\)
-		}
-		\STATE{\(
-			\ui{E}{B} \gets \frac{\ui{E}{B}}{a},
-			\ui{E}{T} \gets \frac{\ui{E}{T}}{c}
-			\)
-		}
-		\STATE{
-			\(Q_k \gets \text{max}(0, \frac{\ui{E}{T}}{\ui{E}{B}} - 1)
-			\)
-		}
-	\end{algorithmic}
+    \caption{Single pass of detection procedure of CPD-DMD}\label{alg:detection}
+    \begin{algorithmic}[1]
+        \REQUIRE{
+            \(\ui{\bar{X}}{B}\),  % Base matrix
+            \(\ui{\bar{X}}{T}\),  % Test matrix
+            \( \Phi \)            % DMD modes matrix
+        }
+        \ENSURE{
+            \(Q_k\)  % Change-point statistics
+        }
+        \newline{\textbf{Project matrices onto DMD subspace}}
+        \STATE{\(
+            \ui{\tilde{\bar{X}}}{B} \gets \Phi^T \ui{\bar{X}}{B} \newline
+            \ui{\tilde{\bar{X}}}{T} \gets \Phi^T \ui{\bar{X}}{T}
+            \)}
+        \newline{\textbf{Compute reconstruction errors}}
+        \STATE{\(
+            \ui{E}{B} \gets \sum_{i = k - a - b - c}^{k - b - c} \left \| \ui{\bar{X}}{B}{i} - \Phi \ui{\tilde{\bar{X}}}{B}{i} \right \|_F^2 \newline
+            \ui{E}{T} \gets \sum_{i = k - c}^{k} \left \| \ui{\bar{X}}{T}{i} - \Phi \ui{\tilde{\bar{X}}}{T}{i} \right \|_F^2
+            \)}
+        \newline{\textbf{Normalize errors by the number of snapshots}}
+        \STATE{\(
+            \ui{E}{B} \gets \frac{\ui{E}{B}}{a} \newline
+            \ui{E}{T} \gets \frac{\ui{E}{T}}{c}
+            \)}
+        \newline{\textbf{Compute change-point statistics}}
+        \STATE{
+            \(Q_k \gets \text{max}(0, \frac{\ui{E}{T}}{\ui{E}{B}} - 1)\)
+        }
+    \end{algorithmic}
 \end{algorithm}
 
+
 \subsection{Full Algorithm}
-The full change point detection algorithm is based on the three steps as shown in Algorithm~\ref{alg:cpd-dmd} (the internal state of the steps is hidden for readability). The algorithm is executed in a single pass over the data stream and is designed to be executed in real time. The algorithm is designed to be executed in real-time and is suitable for deployment in the industrial environment with real-time data acquisition and irregular sampling governed by message queuing service is anticipated.
+The complete change-point detection algorithm comprises three fundamental steps, as outlined in Algorithm~\ref{alg:cpd-dmd}. While the internal parameters of each step are abstracted for readability, their updates remain important. Its architecture is tailored for real-time execution, making it ideal for deployment in industrial environments characterized by dynamic data acquisition and irregular sampling patterns, often orchestrated by message queuing services.
 
 \begin{algorithm}
-	\caption{Single pass of CPD-DMD procedure}\label{alg:cpd-dmd}
-	\begin{algorithmic}[1]
-		\REQUIRE{
-			\(X_{k: k + j}\),
-			\(X^\prime_{k: k + j}\),
-			\(\Theta_{k: k + j}\),
-		}
-		\ENSURE{
-			\(Q_k\)
-		}
-		\STATE{
-			\(\ui{\bar{X}}{L}, \ui{\bar{X}^\prime}{L}, \ui{\bar{X}}{B}, \ui{\bar{X}}{T} \gets
-			\text{preprocessing}( X_{k: k + j}, X^\prime_{k: k + j} )\)
-		}
-		\COMMENT{Algorithm~\ref{alg:preprocessing}}
-		\STATE{
-			\(Q_k \gets \text{detection}( \ui{\bar{X}}{B}, \ui{\bar{X}}{T} )\)
-		}
-		\COMMENT{Algorithm~\ref{alg:detection}}
-		\STATE{
-			\(
-			\text{learning}( \ui{\bar{X}}{L}, \ui{\bar{X}^\prime}{L} )\)
-		}
-		\COMMENT{Algorithm~\ref{alg:learning}}
+    \caption{Single pass of CPD-DMD procedure}\label{alg:cpd-dmd}
+    \begin{algorithmic}[1]
+        \REQUIRE{
+            \(X_{k: k + j}\),  % Current snapshots
+            \(X^\prime_{k: k + j}\),  % One-step delayed snapshots
+            \(\Theta_{k: k + j}\)  % Control actions
+        }
+        \ENSURE{
+            \(Q_k\)  % Change-point statistics
+        }
+        \newline{\textbf{Step 1: Preprocessing the data}}
+        \STATE{\(
+            \ui{\bar{X}}{L}, \ui{\bar{X}^\prime}{L}, \ui{\bar{X}}{B}, \ui{\bar{X}}{T} \gets
+            \text{preprocessing}( X_{k: k + j}, X^\prime_{k: k + j}, \Theta_{k: k + j})
+            \)}
+        \COMMENT{Refer to Algorithm~\ref{alg:preprocessing}}
+        \newline{\textbf{Step 2: Detecting change-points}}
+        \STATE{\(
+            Q_k \gets \text{detection}( \ui{\bar{X}}{B}, \ui{\bar{X}}{T} )
+            \)}
+        \COMMENT{Refer to Algorithm~\ref{alg:detection}}
+        \newline{\textbf{Step 3: Updating the learning model}}
+        \STATE{\(
+            \text{learning}( \ui{\bar{X}}{L}, \ui{\bar{X}^\prime}{L} )
+            \)}
+        \COMMENT{Refer to Algorithm~\ref{alg:learning}}
 
-	\end{algorithmic}
+    \end{algorithmic}
 \end{algorithm}
 
 \subsection{Guidelines}\label{sec:guidelines}
-This subsection aims to provide comprehensive guidelines on selecting hyperparameters for specific use cases and types of problems. This is crucial to making the tool usable across a broad range of industrial applications with unique conditions and specifications. Given the diverse requirements for detecting different types of change points, our guidelines will help you tailor the tool to meet your application's specific needs.
+This subsection aims to provide comprehensive guidelines for selecting hyperparameters tailored to specific use cases and problem types. Such guidance is essential for ensuring the tool's versatility across a broad spectrum of industrial applications characterized by unique conditions and specifications. By offering insights into the selection of hyperparameters, our guidelines aid customization of the method to meet the specific requirements of different applications.
 
 \subsubsection{Optimal rank}
-Determining the approximate rank of the low-rank representation of the system \( r \) is a pivotal and inherently subjective step in any dimensionality reduction technique. To address this, we endorse the systematic hard-thresholding algorithm proposed in \citet{Gavish2014} for extracting \( r \) from noisy data. To employ the algorithm, information about proportion between number of states \((m + l) * h\) of in learning set \(\ui{\bar{X}}{L}\) and learning window size \(a\), which selection is presented later in this Section, is required.
+Determining the approximate rank \( r \) of the low-rank representation of the system is a crucial and inherently subjective step in any dimensionality reduction technique. To address this challenge, we recommend employing the systematic hard-thresholding algorithm proposed by Gavish and Donoho (2014) for extracting \( r \) from noisy data. This algorithm requires information about the proportion between the number of states \((m + l) * h\) in the learning set \(\ui{\bar{X}}{L}\) and the learning window size \(a\), the selection of which is discussed later in this section.
 
-Nevertheless, the proposed \( r \) might be computationally intractable for the time-delayed embeddings. We recommend using the row rank of the original data matrix \( m \) or for augmented matrix \( m + l \) combined with the technique of hard-thresholding to determine the optimal rank if the systems are assumed to be linear, even under the assumption of time delayed effect of control action. Suppose the system is non-linear, or it is assumed that collected data do not represent the underlying dynamics well. In that case, a higher rank might be selected to capture the dynamics while considering limitations on computational resources and delayed response delivery. Thanks to the online nature of the algorithm, the rank can be adjusted in real-time up to a certain threshold based on the significance of the \(r + 1 \) singular value. These updates are supported by online SVD algorithms, such as both presented approaches in \citet{Brand2006} and \citet{Zhang2022}. For details on implementing rank-increasing updates, please refer to the original papers. Referring to the original paper on DMD updates by \citet{Zhang2019} computational time of DMD updates scales with \( \mathcal{O}(r^2) \) and the number of floating point multiplies is \(4n^2\) memory requirements scale with \( \mathcal{O}(a r + 2 r ^ 2) \). This might be used to evaluate the maximum rank for the given problem.
+However, the proposed \( r \) may become computationally intractable for time-delayed embeddings. In such cases, we suggest using the row rank of the original data matrix \( m \) or, for augmented matrices, \( m + l \), in combination with hard-thresholding techniques to determine the optimal rank, particularly when linear system assumptions hold. For nonlinear systems or situations where the collected data inadequately represent the underlying dynamics, a higher rank may be warranted to capture the dynamics effectively, while considering computational constraints and delayed response delivery. The online nature of the algorithm enables real-time adjustments to the rank, up to a certain threshold based on the significance of the \(r + 1\) singular value. These updates are facilitated by online singular value decomposition (SVD) algorithms, such as those presented in \citet{Brand2006} and \citet{Zhang2022}. For implementation details on rank-increasing updates, we refer readers to the original papers. Computational analysis by \citet{Zhang2019}, which applies for our proposed truncated version replacing number of states \(m\) with rank \(r\), indicates that the computational time of DMD updates scales with \( \mathcal{O}(r^2) \), with a number of floating-point multiplies of \(4n^2\), and memory requirements scale with \( \mathcal{O}(a r + 2 r ^ 2) \). This analysis can be utilized to evaluate the maximum rank for a given problem.
 
 \subsubsection{Learning window size}
-Learning window \(d\) influences the validity of the found subspace and significantly impacts the accuracy of the change point detection. For the identification of time-invariant systems, the selection of learning window size should be sufficient to discriminate signal from noise to find the best approximation of the eigenvalues of the generating mechanism. For time-varying, the selection window should be selected such that snapshots of single operating regimes or closely related operating regimes are used for learning. We propose the size of the base window as the lower bound on the learning window, although theoretically, the learning window could be smaller. Upper bound \(k >= b + c + d\) is given by a number of available data as well as the size of the test window and the delay between the test window and the base window.
-
-To sum up, the learning window should be sufficiently large to capture the system's dynamics while not overlapping multiple operating states that differ in their characteristics.
+The learning window size \(d\) significantly influences the validity of the identified subspace and the accuracy of change-point detection. For identifying time-invariant systems, the learning window size should be sufficient to distinguish signal from noise and obtain the best approximation of the eigenvalues of the generating mechanism. For time-varying systems, the window size should encompass snapshots of single operating regimes or closely related operating regimes for effective learning. We propose setting the size of the base window as the lower bound on the learning window, although theoretically, the learning window could be smaller. The upper bound \(k >= b + c + d\) is determined by the number of available data points before the test window size \(c\) delayed by \(b\), as well as the size of the test window and the delay between the test and base windows. In summary, the learning window should be large enough to capture the system's dynamics without overlapping multiple operating states with distinct characteristics.
 
 \subsubsection{Base window size and location}
-Base window size \(a\) should reflect the duration over which stationary signal (single operation) is expected to be anticipated within snapshots. This way, the reconstruction error could represent a reference to the overall quality of the identified sub-space and lessen the adverse effects on the prediction accuracy. The base window should be located directly after the test window \(b = 0\)
-Value of \(a \leq d\) could avoid negative scores in collective anomalies, although they are good differentiator between change points and collective change.
+The base window size \(a\) should reflect the expected duration of a stationary signal (single operation regime) within snapshots. This enables the reconstruction error of base set to serve as a reference for the overall quality of the identified subspace and mitigates adverse effects on prediction accuracy. The base window should be located directly after the test window (\(b = 0\)). A value of \(a \leq d\) could prevent negative scores in collective anomalies, which effectively differentiate between change points and collective changes.
 
 \subsubsection{Test window size}
-The test window size \(c\) defines the smoothness of the change-point statistics over time. The larger the test window, the smoother the change-point statistics. The selection of the test window size should be based on the expected duration of the change-point, the kind of structural changes, and the desired smoothness of the change-point statistics. In optimal cases, the peak of the statistics will be delayed exactly by the test window size from the change point. Therefore, decreasing the delay will push \(c\) to smaller values, while increasing stability and reduction of false positives will push \(c\) to larger values. Small \(c\) enables rapid detection but misses slow drifts due to trends completely.
+The test window size \(c\) determines the smoothness of change-point statistics over time. A larger test window results in smoother change-point statistics~\citep{Moskvina2003}. The selection of the test window size should consider the expected duration of the change-point, the nature of structural changes, and the desired smoothness of change-point statistics. Ideally, the peak of the statistics aligns precisely with the test window size delay from the change point. Decreasing the delay pushes \(c\) to smaller values, enhancing rapid detection but potentially missing slow drifts due to trends. Conversely, increasing stability and reducing false positives push \(c\) to larger values.
 
 \subsubsection{Number of time-delays}
-The number of time delays is perhaps the most uncertain parameter among those specifying ODMD-CPD.~Its selection relies on an assumption about the representativeness of the snapshots w.r.t.~the generating mechanism and maximum expected delay of the effect of the control on the states of the system. If this knowledge is not available and \(a\) is reasonably large, then \citet{Moskvina2003} proposes setting \(h = a / 2\) for the Hankel matrix rank.
+The number of time delays (\(h\)) is a critical parameter for ODMD-CPD in applications to non-linear systems with delayed effect of control action. Its selection relies on assumptions regarding the representativeness of snapshots with respect to the generating mechanism and the maximum expected delay of the control effect on system states. In the absence of such knowledge and with a reasonably large \(a\), \citet{Moskvina2003} recommend setting \(h = a / 2\) for the rank of the Hankel matrix.
 
 \subsubsection{Change-detection statistics threshold}
-The threshold on change-detection statistics will directly influence the number of false positive or false negative alarms. From experience, the following ranges are proposed for different types of problems:
+The threshold on change-detection statistics directly impacts the number of false positive or false negative alarms. We propose the following ranges based on different problem types:
 \begin{itemize}
-	\item higher recall --- \( \interval[open left]{0.0}{0.2} \)
-	\item higher precision --- \( \interval[open left]{0.1}{0.5} \)
-	\item higher F1 score --- 0.25
+    \item higher recall --- \( \interval[open left]{0.0}{0.2} \)
+    \item higher precision --- \( \interval[open left]{0.1}{0.5} \)
+    \item higher F1 score --- 0.25
 \end{itemize}
