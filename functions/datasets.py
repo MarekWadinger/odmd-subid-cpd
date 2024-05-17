@@ -53,57 +53,64 @@ def load_nprs44() -> np.ndarray:
     )
 
 
-def load_cats(file_path: str = "data/cats/data.csv") -> pd.DataFrame:
+def load_cats(resample_s: None | int = None) -> pd.DataFrame:
+    file_path: str = "data/cats/data.csv"
     url = "https://zenodo.org/records/7646897/files/data.parquet"
 
     if os.path.exists(file_path):
         # Read the data from the file into a numpy array
-        return pd.read_csv(file_path, index_col=0)
+        df = pd.read_csv(file_path, index_col=0)
+    else:
 
-    def download_and_read_parquet_with_progress(url):
-        """
-        Download a Parquet file from the given URL, save it to memory, and read
-        it into a pandas DataFrame, while printing the download progress.
+        def download_and_read_parquet_with_progress(url):
+            """
+            Download a Parquet file from the given URL, save it to memory, and read
+            it into a pandas DataFrame, while printing the download progress.
 
-        Parameters:
-            url (str): The URL of the Parquet file to download and read.
+            Parameters:
+                url (str): The URL of the Parquet file to download and read.
 
-        Returns:
-            pandas DataFrame: The DataFrame containing the data from the Parquet file.
-        """
-        from io import BytesIO
+            Returns:
+                pandas DataFrame: The DataFrame containing the data from the Parquet file.
+            """
+            from io import BytesIO
 
-        response = requests.get(url, stream=True)
-        total_size = int(response.headers.get("content-length", 0))
-        bytes_downloaded = 0
+            response = requests.get(url, stream=True)
+            total_size = int(response.headers.get("content-length", 0))
+            bytes_downloaded = 0
 
-        buffer = BytesIO()
-        for data in response.iter_content(chunk_size=1048576):
-            buffer.write(data)
-            bytes_downloaded += len(data)
-            progress = bytes_downloaded / total_size * 100
-            print(
-                f"Downloaded {bytes_downloaded}/{total_size} bytes ({progress:.2f}%)\r",
-                end="",
-            )
+            buffer = BytesIO()
+            for data in response.iter_content(chunk_size=1048576):
+                buffer.write(data)
+                bytes_downloaded += len(data)
+                progress = bytes_downloaded / total_size * 100
+                print(
+                    f"Downloaded {bytes_downloaded}/{total_size} bytes ({progress:.2f}%)\r",
+                    end="",
+                )
 
-        # Reset buffer position to the beginning before reading
-        buffer.seek(0)
+            # Reset buffer position to the beginning before reading
+            buffer.seek(0)
 
-        # Read the Parquet file from the buffer into a pandas DataFrame
-        df = pd.read_parquet(buffer)
-        return df
+            # Read the Parquet file from the buffer into a pandas DataFrame
+            df = pd.read_parquet(buffer)
+            return df
 
-    # Example usage
-    df = download_and_read_parquet_with_progress(url)
+        df = download_and_read_parquet_with_progress(url)
 
-    # Check if the directory exists, if not create it
-    directory = os.path.dirname(file_path)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    print(f"Saving dataset to {file_path}")
-    # Save the data to file_path
-    df.to_csv(file_path)
+        # Check if the directory exists, if not create it
+        directory = os.path.dirname(file_path)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+    df.index = pd.to_datetime(df.index)
+    if resample_s is not None:
+        df = df.resample(f"{resample_s}s").median().iloc[resample_s:]
+
+    if not os.path.exists(file_path):
+        print(f"Saving dataset to {file_path}")
+        # Save the data to file_path
+        df.to_csv(file_path)
 
     return df
 
@@ -143,7 +150,6 @@ def load_skab(file_path: str = "data/skab") -> dict[str, list[pd.DataFrame]]:
                     elif item["type"] == "dir":
                         download_csv_from_git(item["url"], folder_path)
 
-        # Example usage
         download_csv_from_git(url, file_path, add_base=False)
 
     # Recursively go through directories in file_path
@@ -170,6 +176,7 @@ def load_usp(
     file_path: str = "data/usp-stream-data",
 ) -> dict[str, pd.DataFrame]:
     from scipy.io.arff import loadarff
+    from tqdm import tqdm
 
     url = (
         "http://sites.labic.icmc.usp.br/vsouza/repository/usp-stream-data.zip"
@@ -201,15 +208,17 @@ def load_usp(
     for root, _, files in os.walk(file_path):
         # Create a dictionary to store the data frames
         if root != ".":
-            for file in files:
-                if file.endswith(".arff"):
-                    print(f"=== Loading {file} ".ljust(79, "="), end="\r")
-                    # Get the relative path of the file
-                    # Create the corresponding directory structure in the dictionary
-                    raw_data, meta = loadarff(os.path.join(root, file))
-                    df = pd.DataFrame(raw_data, columns=meta.names())
-                    # Store the data frame in the dictionary
-                    data_dict[file.split(".")[0]] = df
+            with tqdm(total=len(files), mininterval=1.0) as pbar:
+                for file in files:
+                    if file.endswith(".arff"):
+                        pbar.set_description(f"Loading {file}")
+                        # Get the relative path of the file
+                        # Create the corresponding directory structure in the dictionary
+                        raw_data, meta = loadarff(os.path.join(root, file))
+                        df = pd.DataFrame(raw_data, columns=meta.names())
+                        # Store the data frame in the dictionary
+                        data_dict[file.split(".")[0]] = df
+                    pbar.update(1)
 
     # Rename the class column to "class" for consistency
     data_dict["chess"] = data_dict["chess"].rename(
@@ -224,16 +233,46 @@ def load_usp(
     data_dict["ozone"] = data_dict["ozone"].rename(columns={"Class": "class"})
 
     # Convert the data types to numeric
-    for k, df in data_dict.items():
-        print(f"=== Processing {k} ".ljust(79, "="), end="\r")
-        df = convert_dtypes_numeric(df)
-        gt = df["class"].copy(deep=True)
-        df = df.select_dtypes(include="number")
-        if "class" not in df.columns:
-            if any(gt.apply(lambda x: isinstance(x, str))):
-                df["class"] = gt.astype("category").cat.codes
-            else:
-                df["class"] = gt
-        df.index = pd.to_datetime(df.index, unit="s")
-        data_dict[k] = df
+    with tqdm(total=len(files), mininterval=1.0) as pbar:
+        for k, df in data_dict.items():
+            pbar.set_description(f"Processing {k}")
+            df = convert_dtypes_numeric(df)
+            gt = df["class"].copy(deep=True)
+            df = df.select_dtypes(include="number")
+            if "class" not in df.columns:
+                if any(gt.apply(lambda x: isinstance(x, str))):
+                    df["class"] = gt.astype("category").cat.codes
+                else:
+                    df["class"] = gt
+            df.index = pd.to_datetime(df.index, unit="s")
+            data_dict[k] = df
+            pbar.update(1)
     return data_dict
+
+
+def load_bess() -> tuple[pd.DataFrame, pd.DataFrame]:
+    folder_path: str = "data/kokam"
+    X_path: str = f"{folder_path}/kokam_norm.csv"
+    y_path: str = f"{folder_path}/kokam_ground_truth.csv"
+    base_url: str = "https://raw.githubusercontent.com/MarekWadinger/adaptive-interpretable-ad/main/examples/"
+
+    for path in [X_path, y_path]:
+        url = base_url + path
+        if not os.path.exists(path):
+            os.makedirs(folder_path, exist_ok=True)
+
+            # Read the data from the file into a numpy array
+            def download_csv_from_git(url, save_path):
+                # Get the contents of the folder
+                response = requests.get(url)
+                if response.status_code == 200:
+                    with open(save_path, "wb") as file:
+                        file.write(response.content)
+
+            download_csv_from_git(url, path)
+
+    X = pd.read_csv(X_path, index_col=0)
+    X.index = pd.to_datetime(X.index)
+    y = pd.read_csv(y_path, index_col=0)
+    y.index = pd.to_datetime(y.index)
+    return X, y
