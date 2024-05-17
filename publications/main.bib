@@ -1,3 +1,18 @@
+@article{Ahmad2017,
+  abstract = {We are seeing an enormous increase in the availability of streaming, time-series data. Largely driven by the rise of connected real-time data sources, this data presents technical challenges and opportunities. One fundamental capability for streaming analytics is to model each stream in an unsupervised fashion and detect unusual, anomalous behaviors in real-time. Early anomaly detection is valuable, yet it can be difficult to execute reliably in practice. Application constraints require systems to process data in real-time, not batches. Streaming data inherently exhibits concept drift, favoring algorithms that learn continuously. Furthermore, the massive number of independent streams in practice requires that anomaly detectors be fully automated. In this paper we propose a novel anomaly detection algorithm that meets these constraints. The technique is based on an online sequence memory algorithm called Hierarchical Temporal Memory (HTM). We also present results using the Numenta Anomaly Benchmark (NAB), a benchmark containing real-world data streams with labeled anomalies. The benchmark, the first of its kind, provides a controlled open-source environment for testing anomaly detection algorithms on streaming data. We present results and analysis for a wide range of algorithms on this benchmark, and discuss future challenges for the emerging field of streaming analytics.},
+  author   = {Subutai Ahmad and Alexander Lavin and Scott Purdy and Zuha Agha},
+  doi      = {https://doi.org/10.1016/j.neucom.2017.04.070},
+  issn     = {0925-2312},
+  journal  = {Neurocomputing},
+  keywords = {Anomaly detection, Hierarchical Temporal Memory, Streaming data, Unsupervised learning, Concept drift, Benchmark dataset},
+  note     = {Online Real-Time Learning Strategies for Data Streams},
+  pages    = {134-147},
+  title    = {Unsupervised real-time anomaly detection for streaming data},
+  url      = {https://www.sciencedirect.com/science/article/pii/S0925231217309864},
+  volume   = {262},
+  year     = {2017}
+}
+
 @article{Brand2006,
   abstract = {This paper develops an identity for additive modifications of a singular value decomposition (SVD) to reflect updates, downdates, shifts, and edits of the data matrix. This sets the stage for fast and memory-efficient sequential algorithms for tracking singular values and subspaces. In conjunction with a fast solution for the pseudo-inverse of a submatrix of an orthogonal matrix, we develop a scheme for computing a thin SVD of streaming data in a single pass with linear time complexity: A rank-r thin SVD of a p×q matrix can be computed in O(pqr) time for r⩽min(p,q).},
   author   = {Matthew Brand},
@@ -53,6 +68,15 @@
   year     = {2020}
 }
 
+@misc{Katser2020,
+  author    = {Iurii D. Katser and Vyacheslav O. Kozitsin},
+  doi       = {10.34740/KAGGLE/DSV/1693952},
+  publisher = {Kaggle},
+  title     = {SKAB - Skoltech Anomaly Benchmark},
+  url       = {https://www.kaggle.com/dsv/1693952},
+  year      = {2020}
+}
+
 @inproceedings{Kawahara2007,
   abstract  = {In this paper, we propose series of algorithms for detecting change points in time-series data based on subspace identification, meaning a geometric approach for estimating linear state-space models behind time-series data. Our algorithms are derived from the principle that the subspace spanned by the columns of an observability matrix and the one spanned by the subsequences of time-series data are approximately equivalent. In this paper, we derive a batch-type algorithm applicable to ordinary time-series data, i.e. consisting of only output series, and then introduce the online version of the algorithm and the extension to be available with input-output time-series data. We illustrate the effectiveness of our algorithms with comparative experiments using some artificial and real datasets.},
   author    = {Kawahara, Yoshinobu and Yairi, Takehisa and Machida, Kazuo},
@@ -66,6 +90,21 @@
   title     = {Change-Point Detection in Time-Series Data Based on Subspace Identification},
   volume    = {},
   year      = {2007}
+}
+
+@inproceedings{Keogh2005,
+  abstract  = {In this work, we introduce the new problem of finding time series discords. Time series discords are subsequences of a longer time series that are maximally different to all the rest of the time series subsequences. They thus capture the sense of the most unusual subsequence within a time series. Time series discords have many uses for data mining, including improving the quality of clustering, data cleaning, summarization, and anomaly detection. Discords are particularly attractive as anomaly detectors because they only require one intuitive parameter (the length of the subsequence) unlike most anomaly detection algorithms that typically require many parameters. We evaluate our work with a comprehensive set of experiments. In particular, we demonstrate the utility of discords with objective experiments on domains as diverse as Space Shuttle telemetry monitoring, medicine, surveillance, and industry, and we demonstrate the effectiveness of our discord discovery algorithm with more than one million experiments, on 82 different datasets from diverse domains.},
+  author    = {Keogh, E. and Lin, J. and Fu, A.},
+  booktitle = {Fifth IEEE International Conference on Data Mining (ICDM'05)},
+  doi       = {10.1109/ICDM.2005.79},
+  issn      = {2374-8486},
+  keywords  = {Telemetry;Computer science;Data mining;Detectors;Detection algorithms;Space shuttles;Surveillance;Aerospace industry;Cleaning;Monitoring;Time Series Data Mining;Anomaly Detection;Clustering},
+  month     = {Nov},
+  number    = {},
+  pages     = {8 pp.-},
+  title     = {HOT SAX: efficiently finding the most unusual time series subsequence},
+  volume    = {},
+  year      = {2005}
 }
 
 @article{Kuehn2011,
@@ -82,6 +121,22 @@
   volume   = {240},
   year     = {2011}
 }
+
+@inproceedings{Lavin2015,
+  abstract  = {Much of the world's data is streaming, time-series data, where anomalies give significant information in critical situations, examples abound in domains such as finance, IT, security, medical, and energy. Yet detecting anomalies in streaming data is a difficult task, requiring detectors to process data in real-time, not batches, and learn while simultaneously making predictions. There are no benchmarks to adequately test and score the efficacy of real-time anomaly detectors. Here we propose the Numenta Anomaly Benchmark (NAB), which attempts to provide a controlled and repeatable environment of open-source tools to test and measure anomaly detection algorithms on streaming data. The perfect detector would detect all anomalies as soon as possible, trigger no false alarms, work with real-world time-series data across a variety of domains, and automatically adapt to changing statistics. Rewarding these characteristics is formalized in NAB, using a scoring algorithm designed for streaming data. NAB evaluates detectors on a benchmark dataset with labeled, real-world time-series data. We present these components, and give results and analyses for several open source, commercially-used algorithms. The goal for NAB is to provide a standard, open source framework with which the research community can compare and evaluate different algorithms for detecting anomalies in streaming data.},
+  author    = {Lavin, Alexander and Ahmad, Subutai},
+  booktitle = {2015 IEEE 14th International Conference on Machine Learning and Applications (ICMLA)},
+  doi       = {10.1109/ICMLA.2015.141},
+  issn      = {},
+  keywords  = {Detectors;Real-time systems;Benchmark testing;Measurement;Detection algorithms;Standards;Algorithm design and analysis;anomaly detection;time-series data;benchmarks;streaming data},
+  month     = {Dec},
+  number    = {},
+  pages     = {38-44},
+  title     = {Evaluating Real-Time Anomaly Detection Algorithms -- The Numenta Anomaly Benchmark},
+  volume    = {},
+  year      = {2015}
+}
+
 
 @article{Moskvina2003,
   abstract  = { This paper is devoted to application of the singular-spectrum analysis to sequential detection of changes in time series. An algorithm of change-point detection in time series, based on sequential application of the singular-spectrum analysis is developed and studied. The algorithm is applied to different data sets and extensively studied numerically. For specific models, several numerical approximations to the error probabilities and the power function of the algorithm are obtained. Numerical comparisons with other methods are given. },
@@ -161,6 +216,24 @@
   year      = {2022}
 }
 
+@article{Schmidl2022,
+  abstract   = {Detecting anomalous subsequences in time series data is an important task in areas ranging from manufacturing processes over finance applications to health care monitoring. An anomaly can indicate important events, such as production faults, delivery bottlenecks, system defects, or heart flicker, and is therefore of central interest. Because time series are often large and exhibit complex patterns, data scientists have developed various specialized algorithms for the automatic detection of such anomalous patterns. The number and variety of anomaly detection algorithms has grown significantly in the past and, because many of these solutions have been developed independently and by different research communities, there is no comprehensive study that systematically evaluates and compares the different approaches. For this reason, choosing the best detection technique for a given anomaly detection task is a difficult challenge.This comprehensive, scientific study carefully evaluates most state-of-the-art anomaly detection algorithms. We collected and re-implemented 71 anomaly detection algorithms from different domains and evaluated them on 976 time series datasets. The algorithms have been selected from different algorithm families and detection approaches to represent the entire spectrum of anomaly detection techniques. In the paper, we provide a concise overview of the techniques and their commonalities; we evaluate their individual strengths and weaknesses and, thereby, consider factors, such as effectiveness, efficiency, and robustness. Our experimental results should ease the algorithm selection problem and open up new research directions.},
+  author     = {Schmidl, Sebastian and Wenig, Phillip and Papenbrock, Thorsten},
+  doi        = {10.14778/3538598.3538602},
+  issn       = {2150-8097},
+  issue_date = {May 2022},
+  journal    = {Proc. VLDB Endow.},
+  month      = {may},
+  number     = {9},
+  numpages   = {19},
+  pages      = {1779–1797},
+  publisher  = {VLDB Endowment},
+  title      = {Anomaly detection in time series: a comprehensive evaluation},
+  url        = {https://doi.org/10.14778/3538598.3538602},
+  volume     = {15},
+  year       = {2022}
+}
+
 @article{Tu2013,
   author  = {Jonathan H. Tu and Clarence W. Rowley and Dirk Martin Luchtenburg and Steven L. Brunton and J. Nathan Kutz},
   journal = {ACM Journal of Computer Documentation},
@@ -169,6 +242,20 @@
   url     = {https://www.aimsciences.org/article/doi/10.3934/jcd.2014.1.391},
   volume  = {1},
   year    = {2013}
+}
+
+@article{Wadinger2024,
+  abstract = {In this paper, we introduce an Adaptable and Interpretable Framework for Anomaly Detection (AID) designed for industrial systems utilizing IoT data streams on top of well-established SCADA systems. AID leverages dynamic conditional probability distribution modeling to capture the normal operation of dynamic systems and isolate the root causes of anomalies at the level of individual inputs. The self-supervised framework dynamically updates parameters of underlying model, allowing it to adapt to non-stationarity. AID interprets anomalies as significant deviations from conditional probability, encompassing interactions as well as both spatial and temporal irregularities by exposing them as features. Crucially, AID provides dynamic operating limits to integrate with existing alarm handling mechanisms in SCADA-based IoT systems. Two industrial-scale case studies demonstrate AID’s capabilities. The first study showcases AID’s effectiveness on energy storage system, adapting to changes, setting context-aware limits for SCADA, and ability to leverage a physics-based model. The second study monitors battery module temperatures, where AID identifies hardware faults, emphasizing its relevance to energy storage safety. A benchmark evaluation on real data shows that AID delivers comparable performance to other self-learning adaptable anomaly detection methods, with the significant advancement in diagnostic capabilities for improved system reliability and performance.},
+  author   = {Marek Wadinger and Michal Kvasnica},
+  doi      = {https://doi.org/10.1016/j.eswa.2024.123200},
+  issn     = {0957-4174},
+  journal  = {Expert Systems with Applications},
+  keywords = {Anomaly detection, Root cause isolation, Iterative learning, Statistical learning, Self-supervised learning},
+  pages    = {123200},
+  title    = {Adaptable and Interpretable Framework for Anomaly Detection in SCADA-based industrial systems},
+  url      = {https://www.sciencedirect.com/science/article/pii/S0957417424000654},
+  volume   = {246},
+  year     = {2024}
 }
 
 @article{Zhang2019,

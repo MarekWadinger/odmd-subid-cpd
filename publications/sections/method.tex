@@ -122,8 +122,8 @@ In cases where the error proportion is less than 1, the reconstructed test set \
             \)}
         \newline{\textbf{Compute reconstruction errors}}
         \STATE{\(
-            \ui{E}{B} \gets \sum_{i = k - a - b - c}^{k - b - c} \left \| \ui{\bar{X}}{B}{i} - \Phi \ui{\tilde{\bar{X}}}{B}{i} \right \|_F^2 \newline
-            \ui{E}{T} \gets \sum_{i = k - c}^{k} \left \| \ui{\bar{X}}{T}{i} - \Phi \ui{\tilde{\bar{X}}}{T}{i} \right \|_F^2
+            \ui{E}{B} \gets \sum_{i = k - a - b - c}^{k - b - c} \left \| \uis{\bar{X}}{B}{i} - \Phi \uis{\tilde{\bar{X}}}{B}{i} \right \|_F^2 \newline
+            \ui{E}{T} \gets \sum_{i = k - c}^{k} \left \| \uis{\bar{X}}{T}{i} - \Phi \uis{\tilde{\bar{X}}}{T}{i} \right \|_F^2
             \)}
         \newline{\textbf{Normalize errors by the number of snapshots}}
         \STATE{\(
@@ -193,9 +193,9 @@ The test window size \(c\) determines the smoothness of change-point statistics 
 The number of time delays (\(h\)) is a critical parameter for ODMD-CPD in applications to non-linear systems with delayed effect of control action. Its selection relies on assumptions regarding the representativeness of snapshots with respect to the generating mechanism and the maximum expected delay of the control effect on system states. In the absence of such knowledge and with a reasonably large \(a\), \citet{Moskvina2003} recommend setting \(h = a / 2\) for the rank of the Hankel matrix.
 
 \subsubsection{Change-detection statistics threshold}
-The threshold on change-detection statistics directly impacts the number of false positive or false negative alarms. We propose the following ranges based on different problem types:
+The threshold on change-detection statistics directly impacts the number of false positive or false negative alarms. Its proper selection further determines the delay of the detection alarm, as the rising change-point detection statistics crosses threshold sooner. We propose the following ranges based on different problem types:
 \begin{itemize}
-    \item higher recall --- \( \interval[open left]{0.0}{0.2} \)
-    \item higher precision --- \( \interval[open left]{0.1}{0.5} \)
-    \item higher F1 score --- 0.25
+    \item achieving higher recall (lower false negative (FN) rate) --- \( \interval[open left]{0.0}{0.25} \)
+    \item achieving higher precision (lower false positive (FP) rate) --- \( \interval[open left]{0.25}{0.5} \)
+    \item achieving higher F1 score (tradeoff between lower FN and FP) --- 0.25
 \end{itemize}

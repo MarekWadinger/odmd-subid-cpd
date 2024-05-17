@@ -1,5 +1,5 @@
 \documentclass[preprint,12pt,authoryear]{elsarticle}
-
+%% Check linewidth with \the\linewidth
 %% The amssymb package provides various useful mathematical symbols
 \usepackage{amssymb}
 %% The amsmath package provides various useful equation environments.
@@ -16,6 +16,10 @@ soft open fences, separator symbol=;,
 \usepackage{graphicx}
 %% Verbatim with URL-sensitive line breaks
 \usepackage{url}
+%% The table improvements package
+\usepackage{booktabs}
+%% The SI units alignment
+\usepackage{siunitx}
 
 %% The lineno packages adds line numbers. Start line numbering with
 %% \begin{linenumbers}, end it with \end{linenumbers}. Or switch it on
@@ -114,10 +118,10 @@ soft open fences, separator symbol=;,
 
 \clearpage
 \section{Results}\label{sec:results}
-% \input{sections/results.tex}
+\input{sections/results.tex}
 
 \section{Conclusions}\label{sec:conclusions}
-% \input{sections/conclusions.tex}
+\input{sections/conclusions.tex}
 
 \section*{Notation}
 \input{sections/notation.tex}
