@@ -51,6 +51,7 @@ repos:
           [
             "--ignore-missing-imports",
             "--explicit-package-bases",
+            "--implicit-optional",
             "--check-untyped-defs",
           ]
         stages:
