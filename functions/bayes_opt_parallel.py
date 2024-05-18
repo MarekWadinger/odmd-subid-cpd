@@ -73,9 +73,7 @@ class BayesianOptimizationHandler(RequestHandler):
             )
             if self._verbose > 1:
                 print(
-                    "BO has registered: {} points.".format(
-                        len(self._bo.space)
-                    ),
+                    f"BO has registered: {len(self._bo.space)} points.",
                     end="\n\n",
                 )
         except KeyError:
