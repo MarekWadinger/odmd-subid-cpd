@@ -1,4 +1,4 @@
-from typing import Literal, Union
+from typing import Literal
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -35,9 +35,7 @@ formatter = mdates.ConciseDateFormatter(
 
 
 def set_size(
-    width: Union[
-        float, int, Literal["article", "thesis", "beamer"]
-    ] = 307.28987,
+    width: float | int | Literal["article", "thesis", "beamer"] = 307.28987,
     fraction=1,
     subplots=(1, 1),
 ):
