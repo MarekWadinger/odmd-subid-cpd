@@ -435,8 +435,7 @@ def chp_score(
     table_of_coef=None,
     scale_func="improved",
     scale_koef=1,
-    plot_figure=False,
-    verbose=True,
+    verbose=False,
 ):
     """
     Parameters
@@ -594,113 +593,63 @@ def chp_score(
     ...     print(f"{y_true}{y_pred}")
     ...     y_pred = convert_comp(y_pred)
     ...     print("=== Binary ===")
-    ...     chp_score(
+    ...     print(chp_score(
     ...         y_true_,
     ...         y_pred,
     ...         metric="binary",
-    ...     )
+    ...     ))
     ...     print("=== Average time ===")
-    ...     chp_score(
+    ...     print(chp_score(
     ...         y_true_,
     ...         y_pred,
     ...         metric="average_time",
     ...         window_width="3s",
     ...         anomaly_window_destination="righter",
     ...         portion=1,
-    ...     )
+    ...     ))
     ...     print("=== NAB ===")
-    ...     chp_score(
+    ...     print(chp_score(
     ...         y_true_,
     ...         y_pred,
     ...         metric="nab",
     ...         window_width="3s",
     ...         anomaly_window_destination="righter",
     ...         portion=1,
-    ...     )
+    ...     ))
     [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     === Binary ===
-    False Alarm Rate 0.0 %
-    Missing Alarm Rate 100.0 %
-    F1 metric 0.0
     (0.0, 0.0, 100.0)
     === Average time ===
-    Amount of true anomalies 1
-    A number of missed CPs = 1
-    A number of FPs = 0
-    Average time nan
     (nan, 1, 0, 1)
     === NAB ===
-    Standard  -  0.0
-    LowFP  -  0.0
-    LowFN  -  0.0
     {'Standard': 0.0, 'LowFP': 0.0, 'LowFN': 0.0}
     [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
     === Binary ===
-    False Alarm Rate 16.67 %
-    Missing Alarm Rate 100.0 %
-    F1 metric 0.0
     (0.0, 16.67, 100.0)
     === Average time ===
-    Amount of true anomalies 1
-    A number of missed CPs = 0
-    A number of FPs = 0
-    Average time 0 days 00:00:03
     (Timedelta('0 days 00:00:03'), 0, 0, 1)
     === NAB ===
-    Standard  -  44.5
-    LowFP  -  39.0
-    LowFN  -  63.0
     {'Standard': 44.5, 'LowFP': 39.0, 'LowFN': 63.0}
     [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     === Binary ===
-    False Alarm Rate 16.67 %
-    Missing Alarm Rate 100.0 %
-    F1 metric 0.0
     (0.0, 16.67, 100.0)
     === Average time ===
-    Amount of true anomalies 1
-    A number of missed CPs = 1
-    A number of FPs = 1
-    Average time nan
     (nan, 1, 1, 1)
     === NAB ===
-    Standard  -  -5.5
-    LowFP  -  -11.0
-    LowFN  -  -3.67
     {'Standard': -5.5, 'LowFP': -11.0, 'LowFN': -3.67}
     [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
     === Binary ===
-    False Alarm Rate 100.0 %
-    Missing Alarm Rate 0.0 %
-    F1 metric 0.25
     (0.25, 100.0, 0.0)
     === Average time ===
-    Amount of true anomalies 1
-    A number of missed CPs = 0
-    A number of FPs = 3
-    Average time 0 days 00:00:00
     (Timedelta('0 days 00:00:00'), 0, 3, 1)
     === NAB ===
-    Standard  -  83.5
-    LowFP  -  67.0
-    LowFN  -  89.0
     {'Standard': 83.5, 'LowFP': 67.0, 'LowFN': 89.0}
     [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
     === Binary ===
-    False Alarm Rate 0.0 %
-    Missing Alarm Rate 0.0 %
-    F1 metric 1.0
     (1.0, 0.0, 0.0)
     === Average time ===
-    Amount of true anomalies 1
-    A number of missed CPs = 0
-    A number of FPs = 0
-    Average time 0 days 00:00:00
     (Timedelta('0 days 00:00:00'), 0, 0, 1)
     === NAB ===
-    Standard  -  100.0
-    LowFP  -  100.0
-    LowFN  -  100.0
     {'Standard': 100.0, 'LowFP': 100.0, 'LowFN': 100.0}
     """
 
