@@ -1,6 +1,7 @@
 """Change Detection based on Subspace Identification algorithm."""
 
 from collections import deque
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -54,6 +55,42 @@ def get_default_params(X, window_size: int, max_rank=10):
 
 
 class SubIDChangeDetector(AnomalyDetector):
+    """Change-Point Detection on Subspace Identification.
+
+    This class implements a change-point detection algorithm based on subspace identification. It uses a subspace identification algorithm to transform the data and then computes the distance between the original data and the transformed data. The distance is then used to detect changes in the data distribution.
+
+    Args:
+        subid (MiniBatchTransformer | Transformer | Rolling): Subspace identification algorithm
+        ref_size (int): Size of the reference window
+        test_size (int, optional): Size of the test window. Defaults to None -> ref_size.
+        threshold (float, optional): Detection threshold. Defaults to 0.25.
+        time_lag (int, optional): Time lag. Defaults to 0.
+        grace_period (int, optional): Grace period. Defaults to 0.
+        learn_after_grace (bool, optional): Learn after grace period. Defaults to True.
+        start_soon ("soon", "wait", "late", optional): Start detection as soon as possible. Defaults to "late".
+            soon (test: o, ref: x, both: w, none: .):
+                3: www      (started)
+                4: wwwo
+                5: wwwoo
+                6: wwwooo
+                7: www.ooo
+                8: .www.ooo
+            wait (test: o, ref: x, both: w, none: .):
+                3: ooo
+                4: .ooo
+                5: w.ooo    (started)
+                6: ww.ooo
+                7: www.ooo
+                8: .www.ooo
+            late (test: o, ref: x, both: w, none: .):
+                3: ooo
+                4: .ooo
+                5: w.ooo
+                6: ww.ooo
+                7: www.ooo  (started)
+                8: .www.ooo
+    """
+
     def __init__(
         self,
         subid: MiniBatchTransformer | Transformer | Rolling,
@@ -63,6 +100,7 @@ class SubIDChangeDetector(AnomalyDetector):
         time_lag: int = 0,
         grace_period: int = 0,
         learn_after_grace: bool = True,
+        start_soon: Literal["soon", "wait", "late"] = "late",
     ):
         self.subid = subid
         self.threshold = threshold
@@ -79,11 +117,12 @@ class SubIDChangeDetector(AnomalyDetector):
         assert self.ref_size > 0
         assert self.test_size > 0
         assert self.test_size + self.time_lag >= 0
-        self.learn_delay = self.time_lag + self.test_size
+        self._learn_delay = self.time_lag + self.test_size
         # assert self.grace_period < self.test_size
         # TODO: basically grace period should be omitted and detection start once Transformer is fitted
         self.grace_period = grace_period
         self.learn_after_grace = learn_after_grace
+        self.start_soon = start_soon
         self.n_seen = 0
 
         self._score: float | None = None
@@ -99,16 +138,22 @@ class SubIDChangeDetector(AnomalyDetector):
         if self._distances is None:
             # Do inference after grace period and enough data is available
             lenght_X = len(self._X)
-            if (
-                self.n_seen >= self.grace_period
-                and lenght_X > self.learn_delay
-            ):
+            idx_end = self._learn_delay
+            if self.start_soon == "soon":
+                cond_soon = lenght_X > max(self.ref_size, self.test_size)
+                idx_end = lenght_X - self.ref_size
+            elif self.start_soon == "wait":
+                cond_soon = lenght_X > self._learn_delay
+            elif self.start_soon == "late":
+                cond_soon = lenght_X == self.ref_size + self._learn_delay
+
+            if self.n_seen >= self.grace_period and cond_soon:
                 X = pd.DataFrame(self._X)
                 X_p = self._transform_many(X)
                 D_train = self._compute_distance(
-                    X.iloc[: -self.learn_delay, :],
-                    X_p.iloc[: -self.learn_delay, :],
-                ) / (lenght_X - self.learn_delay)
+                    X.iloc[:-idx_end, :],
+                    X_p.iloc[:-idx_end, :],
+                ) / (lenght_X - idx_end)
                 D_test = (
                     self._compute_distance(
                         X.iloc[-self.test_size :, :],
@@ -227,6 +272,16 @@ class SubIDChangeDetector(AnomalyDetector):
         """Allias for update method for interoperability with Pipeline."""
         self.update(x, **params)
 
+    @property
+    def learn_delay(self):
+        if self.start_soon == "soon":
+            delay = None
+        elif self.start_soon == "wait":
+            delay = len(self._X) >= self._learn_delay
+        elif self.start_soon == "late":
+            delay = len(self._X) == self.ref_size + self._learn_delay
+        return delay
+
     def learn_many(self, X: pd.DataFrame, **params) -> None:
         n = len(X)
         # If buffer is too small, learn in chunks
@@ -244,23 +299,25 @@ class SubIDChangeDetector(AnomalyDetector):
 
         # Learn the model if data past the time lag and test size is availabe
         # If learn_after_grace is False learn only when grace period is not yet over
-        if len(self._X) > self.learn_delay and (
-            self.learn_after_grace or self.n_seen < self.grace_period
-        ):
+        cond_grace = self.learn_after_grace or self.n_seen < self.grace_period
+        cond_soon = (
+            len(self._X) >= self.learn_delay + n if self.learn_delay else True
+        )
+        if cond_soon and cond_grace:
+            idx_start = -self.learn_delay - n if self.learn_delay else -n
+            idx_end = -self.learn_delay if self.learn_delay else None
             if isinstance(self.subid, Rolling):
                 self.subid.update_many(
-                    X_.iloc[-self.learn_delay - n : -self.learn_delay],
+                    X_.iloc[idx_start:idx_end],
                     **params,
                 )
             elif isinstance(self.subid, MiniBatchTransformer):
                 self.subid.learn_many(
-                    X_.iloc[-self.learn_delay - n : -self.learn_delay],
+                    X_.iloc[idx_start:idx_end],
                     **params,
                 )
             else:
-                for x in X_.iloc[
-                    -self.learn_delay - n : -self.learn_delay
-                ].to_dict(orient="records"):
+                for x in X_.iloc[idx_start:idx_end].to_dict(orient="records"):
                     self.subid.learn_one(x, **params)
         self.n_seen += n
 
@@ -282,13 +339,16 @@ class SubIDChangeDetector(AnomalyDetector):
         self._X.append(x)
         # Learn the model if data past the time lag and test size is availabe
         # If learn_after_grace is False learn only when grace period is not yet over
-        if len(self._X) > self.learn_delay and (
-            self.learn_after_grace or self.n_seen < self.grace_period
-        ):
+        cond_grace = self.learn_after_grace or self.n_seen < 400
+        cond_soon = (
+            len(self._X) > self.learn_delay if self.learn_delay else True
+        )
+        if cond_soon and cond_grace:
+            idx = -self.learn_delay - 1 if self.learn_delay else -1
             if isinstance(self.subid, Rolling):
-                self.subid.update(self._X[-self.learn_delay - 1], **params)
+                self.subid.update(self._X[idx], **params)
             else:
-                self.subid.learn_one(self._X[-self.learn_delay - 1], **params)
+                self.subid.learn_one(self._X[idx], **params)
         self.n_seen += 1
 
 
