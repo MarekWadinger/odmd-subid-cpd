@@ -44,13 +44,14 @@ repos:
     hooks:
       - id: mypy # mypy is a pre-commit hook that runs as a linter to check for type errors
         name: mypy
-        entry: mypy --implicit-optional
+        entry: mypy
         language: system
         types: [python]
         args:
           [
             "--ignore-missing-imports",
             "--explicit-package-bases",
+            "--implicit-optional",
             "--check-untyped-defs",
           ]
         stages:

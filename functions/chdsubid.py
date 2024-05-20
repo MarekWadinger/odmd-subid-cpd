@@ -1,6 +1,7 @@
 """Change Detection based on Subspace Identification algorithm."""
 
 from collections import deque
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -50,10 +51,46 @@ def get_default_params(X, window_size: int, max_rank=10):
         r = min(get_default_rank(X), max_rank)
     else:
         r = max_rank
-    return window_size, hn, ref_size, test_size, r
+    return hn, ref_size, test_size, r
 
 
 class SubIDChangeDetector(AnomalyDetector):
+    """Change-Point Detection on Subspace Identification.
+
+    This class implements a change-point detection algorithm based on subspace identification. It uses a subspace identification algorithm to transform the data and then computes the distance between the original data and the transformed data. The distance is then used to detect changes in the data distribution.
+
+    Args:
+        subid (MiniBatchTransformer | Transformer | Rolling): Subspace identification algorithm
+        ref_size (int): Size of the reference window
+        test_size (int, optional): Size of the test window. Defaults to None -> ref_size.
+        threshold (float, optional): Detection threshold. Defaults to 0.25.
+        time_lag (int, optional): Time lag. Defaults to 0.
+        grace_period (int, optional): Grace period. Defaults to 0.
+        learn_after_grace (bool, optional): Learn after grace period. Defaults to True.
+        start_soon ("soon", "wait", "late", optional): Start detection as soon as possible. Defaults to "late".
+            soon (test: o, ref: x, both: w, none: .):
+                3: www      (started)
+                4: wwwo
+                5: wwwoo
+                6: wwwooo
+                7: www.ooo
+                8: .www.ooo
+            wait (test: o, ref: x, both: w, none: .):
+                3: ooo
+                4: .ooo
+                5: w.ooo    (started)
+                6: ww.ooo
+                7: www.ooo
+                8: .www.ooo
+            late (test: o, ref: x, both: w, none: .):
+                3: ooo
+                4: .ooo
+                5: w.ooo
+                6: ww.ooo
+                7: www.ooo  (started)
+                8: .www.ooo
+    """
+
     def __init__(
         self,
         subid: MiniBatchTransformer | Transformer | Rolling,
@@ -63,6 +100,7 @@ class SubIDChangeDetector(AnomalyDetector):
         time_lag: int = 0,
         grace_period: int = 0,
         learn_after_grace: bool = True,
+        start_soon: Literal["soon", "wait", "late"] = "late",
     ):
         self.subid = subid
         self.threshold = threshold
@@ -79,19 +117,87 @@ class SubIDChangeDetector(AnomalyDetector):
         assert self.ref_size > 0
         assert self.test_size > 0
         assert self.test_size + self.time_lag >= 0
+        self._learn_delay = self.time_lag + self.test_size
         # assert self.grace_period < self.test_size
         # TODO: basically grace period should be omitted and detection start once Transformer is fitted
         self.grace_period = grace_period
         self.learn_after_grace = learn_after_grace
+        self.start_soon = start_soon
         self.n_seen = 0
-        self.score: float = 0.0
 
-        self._distances: tuple[float, float]
-        self._drift_detected: bool = False
+        self._score: float | None = None
+        self._distances: tuple[complex, complex] | None = None
+        self._drift_detected: bool | None = None
 
         self._X: deque[dict] = deque(
             maxlen=self.ref_size + self.time_lag + self.test_size
         )
+
+    @property
+    def distances(self) -> tuple[complex, complex]:
+        if self._distances is None:
+            # Do inference after grace period and enough data is available
+            lenght_X = len(self._X)
+            idx_end = self._learn_delay
+            if self.start_soon == "soon":
+                cond_soon = lenght_X > max(self.ref_size, self.test_size)
+                idx_end = lenght_X - self.ref_size
+            elif self.start_soon == "wait":
+                cond_soon = lenght_X > self._learn_delay
+            elif self.start_soon == "late":
+                cond_soon = lenght_X == self.ref_size + self._learn_delay
+
+            if self.n_seen >= self.grace_period and cond_soon:
+                X = pd.DataFrame(self._X)
+                X_p = self._transform_many(X)
+                D_train = self._compute_distance(
+                    X.iloc[:-idx_end, :],
+                    X_p.iloc[:-idx_end, :],
+                ) / (lenght_X - idx_end)
+                D_test = (
+                    self._compute_distance(
+                        X.iloc[-self.test_size :, :],
+                        X_p.iloc[-self.test_size :, :],
+                    )
+                    / self.test_size
+                )
+                distances = (D_train, D_test)
+            else:
+                distances = (1.0 + 0.0j, 1.0 + 0.0j)
+            self._distances = distances
+        else:
+            distances = self._distances
+        return distances
+
+    @property
+    def drift_detected(self) -> bool:
+        if self._drift_detected is None:
+            drift_detected = self.score > self.threshold
+            self._drift_detected = drift_detected
+        else:
+            drift_detected = self._drift_detected
+        return drift_detected
+
+    @property
+    def score(self) -> float:
+        if self._score is None:
+            # Under some circumstances score < 0
+            #  - lower test noise
+            #  - running normalization
+            #  - ...
+            D_train, D_test = self.distances
+            score_ = (D_test / D_train) - 1
+            # TODO: explore interesting scoring option
+            # score = D_train - D_test
+            # TODO: figure out proper way of utilizing imaginary part of score
+            if isinstance(score_, complex):
+                score: float = score_.real + np.abs(score_.imag)
+            # TODO: comment on score shawing
+            score = max(score, 0.0)
+            self._score = score
+        else:
+            score = self._score
+        return score
 
     @property
     def _supervised(self):
@@ -104,27 +210,47 @@ class SubIDChangeDetector(AnomalyDetector):
         """
         return False
 
-    def _compute_distance(self, X: pd.DataFrame, X_p: pd.DataFrame) -> float:
-        """Compute the distance between the Hankel matrix and its transformation.
+    def _compute_distance(self, X: pd.DataFrame, X_t: pd.DataFrame) -> complex:
+        """Compute the distance between the data matrix and its transformation.
 
         This formulation computes a measure of how much information in the dataset represented by Y is preserved or retained when projected onto the space spanned by W. The difference between the covariance matrix of Y and the projected version is computed, and the sum of all elements in this difference matrix gives an overall measure of dissimilarity or distortion.
 
         Args:
-            Y): Hankel matrix
+            X: data matrix
+            X_t: Transformed data matrix
 
         Returns:
-            Distance between the Hankel matrix and its transformation.
+            Distance between the data matrix and its transformation.
         """
-        XX = (X**2).sum().sum()
-        # XX = np.linalg.norm(X, 1)
-        # Using following normalization changes the score baseline based on
-        #  the proportion of ref and test size
+        # Project the transformed data to the original space
+        #  Similar scores are obtained combining this step with 2 norm and without projection and differencing covariances. Latter is less expensive
+        # if hasattr(self.subid, "modes"):
+        #     X_p = X_t @ self.subid.modes.T
+        # elif hasattr(self.subid, "_U"):
+        #     X_p = X_t @ self.subid._U.T
+        # Opt 1: Using Frobenius norm
+        # Q = float(
+        #     np.linalg.norm(np.inner(X, X) - np.inner(X_p, X_p), ord="fro")
+        # )
+        # return Q
+        # Opt 2: Using squared L1 norm (Kawahara 2007)
+        XX = np.sum(X.values**2)
+        # # XX = np.linalg.norm(X, 1)
+        # # # Using following normalization changes the score baseline based on
+        # # #  the proportion of ref and test size
         XX_std = 1  # np.sqrt(XX)
-        XpXp = (X_p**2).sum().sum()
-        # XpXp = np.linalg.norm(X_p, 1)
-        XpXp_std = 1  # np.sqrt(XpXp)
+        XtXt = np.sum(X_t.values**2)
+        # # XtXt = np.linalg.norm(X_t, 1)
+        XtXt_std = 1  # np.sqrt(XtXt)
+        return complex(XX / XX_std - XtXt / XtXt_std)
+        # Opt 3: Using norm with projected data
+        # Q = np.sum(np.linalg.norm(X.values - X_p.values, ord=1, axis=1))
+        # return float(Q)
 
-        return XX / XX_std - XpXp / XpXp_std
+    def _reset_score(self):
+        self._score = None
+        self._distances = None
+        self._drift_detected = None
 
     def _transform_many(self, X: pd.DataFrame) -> pd.DataFrame:
         if (
@@ -142,71 +268,23 @@ class SubIDChangeDetector(AnomalyDetector):
             )
         return X_p
 
-    def update(self, x: dict, **params) -> None:
-        self._X.append(x)
-
-        learn_delay = self.time_lag + self.test_size
-
-        # Do inference after grace period and enough data is available
-        if (
-            self.n_seen >= self.grace_period
-            and len(self._X) == self.ref_size + learn_delay
-        ):
-            X = pd.DataFrame(self._X)
-            X_p = self._transform_many(X)
-            D_train: float = (
-                self._compute_distance(
-                    X.iloc[: self.ref_size, :],
-                    X_p.iloc[: self.ref_size, :],
-                )
-                / self.ref_size
-            )
-            D_test = (
-                self._compute_distance(
-                    X.iloc[-self.test_size :, :],
-                    X_p.iloc[-self.test_size :, :],
-                )
-                / self.test_size
-            )
-            # TODO: Figure out onder what circumstances the distance of train
-            #  is higher than the distance of test (lower test noise?, running normalization, ...)
-            self.distances = (D_train, D_test)
-            self.score = (D_test / D_train) - 1
-            # TODO: explore interesting scoring option
-            # self.score = D_train - D_test
-            # TODO: figure out proper way of utilizing imaginary part of score
-            if isinstance(self.score, complex):
-                self.score = self.score.real + np.abs(self.score.imag)
-            # TODO: comment on score shawing
-            self.score = max(self.score, 0.0)
-            self._drift_detected = self.score > self.threshold
-        else:
-            self.score = 0.0
-            self._drift_detected = False
-
-        # Learn the model if data past the time lag and test size is availabe
-        # If learn_after_grace is False learn only when grace period is not yet over
-        if len(self._X) > learn_delay and (
-            self.learn_after_grace or self.n_seen < self.grace_period
-        ):
-            if isinstance(self.subid, Rolling):
-                self.subid.update(self._X[-learn_delay - 1], **params)
-            else:
-                self.subid.learn_one(self._X[-learn_delay - 1], **params)
-        self.n_seen += 1
-
     def learn_one(self, x: dict, **params) -> None:
         """Allias for update method for interoperability with Pipeline."""
         self.update(x, **params)
 
-    def score_one(self, *args):
-        return self.score
-
-    def predict_one(self, *args):
-        return self._drift_detected
+    @property
+    def learn_delay(self):
+        if self.start_soon == "soon":
+            delay = None
+        elif self.start_soon == "wait":
+            delay = len(self._X) >= self._learn_delay
+        elif self.start_soon == "late":
+            delay = len(self._X) == self.ref_size + self._learn_delay
+        return delay
 
     def learn_many(self, X: pd.DataFrame, **params) -> None:
         n = len(X)
+        # If buffer is too small, learn in chunks
         buffer_len = self.ref_size + self.time_lag + self.test_size
         if n > buffer_len:
             for X_part in [
@@ -214,68 +292,64 @@ class SubIDChangeDetector(AnomalyDetector):
             ]:
                 self.learn_many(X_part, **params)
             return
-        # This will discard samples beyond window size
+        # This would discard samples beyond window size, but we make chunks
         self._X.extend(X.to_dict(orient="records"))
 
         X_ = pd.DataFrame(self._X)
 
-        learn_delay = self.time_lag + self.test_size
         # Learn the model if data past the time lag and test size is availabe
         # If learn_after_grace is False learn only when grace period is not yet over
-        if len(self._X) > learn_delay and (
-            self.learn_after_grace or self.n_seen < self.grace_period
-        ):
+        cond_grace = self.learn_after_grace or self.n_seen < self.grace_period
+        cond_soon = (
+            len(self._X) >= self.learn_delay + n if self.learn_delay else True
+        )
+        if cond_soon and cond_grace:
+            idx_start = -self.learn_delay - n if self.learn_delay else -n
+            idx_end = -self.learn_delay if self.learn_delay else None
             if isinstance(self.subid, Rolling):
                 self.subid.update_many(
-                    X_.iloc[-learn_delay - n : -learn_delay], **params
+                    X_.iloc[idx_start:idx_end],
+                    **params,
                 )
             elif isinstance(self.subid, MiniBatchTransformer):
                 self.subid.learn_many(
-                    X_.iloc[-learn_delay - n : -learn_delay], **params
+                    X_.iloc[idx_start:idx_end],
+                    **params,
                 )
             else:
-                for x in X_.iloc[-learn_delay - n : -learn_delay].to_dict(
-                    orient="records"
-                ):
+                for x in X_.iloc[idx_start:idx_end].to_dict(orient="records"):
                     self.subid.learn_one(x, **params)
         self.n_seen += n
 
-        # TODO: fix inference only infers last sample
-        # Do inference after grace period and enough data is available
-        if (
-            self.n_seen >= self.grace_period
-            and len(self._X) == self.ref_size + learn_delay
-        ):
-            X_p = self._transform_many(X_)
-            D_train: float = (
-                self._compute_distance(
-                    X_.iloc[: self.ref_size, :],
-                    X_p.iloc[: self.ref_size, :],
-                )
-                / self.ref_size
-            )
-            D_test = (
-                self._compute_distance(
-                    X_.iloc[-self.test_size :, :],
-                    X_p.iloc[-self.test_size :, :],
-                )
-                / self.test_size
-            )
-            # TODO: Figure out onder what circumstances the distance of train
-            #  is higher than the distance of test (lower test noise?, running normalization, ...)
-            self.distances = (D_train, D_test)
-            self.score = (D_test / D_train) - 1
-            # TODO: explore interesting scoring option
-            # self.score = D_train - D_test
-            # TODO: figure out proper way of utilizing imaginary part of score
-            if isinstance(self.score, complex):
-                self.score = self.score.real + np.abs(self.score.imag)
-            # TODO: comment on score shawing
-            self.score = max(self.score, 0.0)
-            self._drift_detected = self.score > self.threshold
-        else:
-            self.score = 0.0
-            self._drift_detected = False
+    def predict_one(self, *args):
+        return self._drift_detected
+
+    def score_one(self, x: dict) -> float:
+        # Temporarily add the new sample to the buffer
+        self._X.append(x)
+
+        self._reset_score()
+        score = self.score
+
+        # Preserve stateless behavior
+        self._X.pop()
+        return score
+
+    def update(self, x: dict, **params) -> None:
+        self._X.append(x)
+        # Learn the model if data past the time lag and test size is availabe
+        # If learn_after_grace is False learn only when grace period is not yet over
+        cond_grace = self.learn_after_grace or self.n_seen < 400
+        cond_soon = (
+            len(self._X) > self.learn_delay if self.learn_delay else True
+        )
+        if cond_soon and cond_grace:
+            idx = -self.learn_delay - 1 if self.learn_delay else -1
+            if isinstance(self.subid, Rolling):
+                self.subid.update(self._X[idx], **params)
+            else:
+                self.subid.learn_one(self._X[idx], **params)
+        self.n_seen += 1
 
 
 class DMDOptSubIDChangeDetector(SubIDChangeDetector):
@@ -299,7 +373,7 @@ class DMDOptSubIDChangeDetector(SubIDChangeDetector):
         subid: OnlineDMD | OnlineDMDwC | Rolling,
         ref_size: int,
         test_size: int | None = None,
-        threshold: float = 0.1,
+        threshold: float = 0.25,
         time_lag: int = 0,
         grace_period: int = 0,
         learn_after_grace: bool = True,
@@ -323,9 +397,7 @@ class DMDOptSubIDChangeDetector(SubIDChangeDetector):
             subid_: Transformer = self.subid.obj  # type: ignore
         else:
             subid_ = self.subid
-        if (
-            isinstance(subid_, (OnlineDMD, OnlineDMDwC))
-        ) and subid_.A_allclose:
+        if (isinstance(subid_, OnlineDMD | OnlineDMDwC)) and subid_.A_allclose:
             self._Xp.append(subid_.transform_one(X.iloc[-1].to_dict()))
         else:
             X_p = super()._transform_many(X)
