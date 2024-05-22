@@ -102,6 +102,28 @@
   year      = {2022}
 }
 
+@inbook{Chen2017,
+  abstract  = { Abstract In this paper, we introduce autoencoder ensembles for unsupervised outlier detection. One problem with neural networks is that they are sensitive to noise and often require large data sets to work robustly, while increasing data size makes them slow. As a result, there are only a few existing works in the literature on the use of neural networks in outlier detection. This paper shows that neural networks can be a very competitive technique to other existing methods. The basic idea is to randomly vary on the connectivity architecture of the autoencoder to obtain significantly better performance. Furthermore, we combine this technique with an adaptive sampling method to make our approach more efficient and effective. Experimental results comparing the proposed approach with state-of-the-art detectors are presented on several benchmark data sets showing the accuracy of our approach. },
+  author    = {Jinghui Chen and Saket Sathe and Charu Aggarwal and Deepak Turaga},
+  booktitle = {Proceedings of the 2017 SIAM International Conference on Data Mining (SDM)},
+  chapter   = {},
+  doi       = {10.1137/1.9781611974973.11},
+  eprint    = {https://epubs.siam.org/doi/pdf/10.1137/1.9781611974973.11},
+  pages     = {90-98},
+  title     = {Outlier Detection with Autoencoder Ensembles},
+  url       = {https://epubs.siam.org/doi/abs/10.1137/1.9781611974973.11},
+  year      = {2017}
+}
+
+@misc{Chollet2016,
+  author       = {Francois Chollet},
+  howpublished = {\url{https://blog.keras.io/building-autoencoders-in-keras.html}},
+  note         = {[Accessed 22-05-2024]},
+  title        = {Building Autoencoders in Keras},
+  year         = {2016},
+  year         = {2020}
+}
+
 @article{Chu2022,
   abstract = {In many applications, it is often of practical and scientific interest to detect anomaly events in a streaming sequence of high-dimensional or non-Euclidean observations. We study a non-parametric framework that utilizes nearest neighbor information among the observations to detect changes in an online setting. It can be applied to data in arbitrary dimension and non-Euclidean data as long as a similarity measure on the sample space can be defined. We consider new test statistics under this framework that can detect anomaly events more effectively than the existing test while keeping the false discovery rate controlled at a fixed level. Analytic formulas approximating the average run lengths of the new approaches are derived to make them fast applicable to modern datasets. Simulation studies are provided to support theoretical results. The proposed approach is illustrated with an analysis of the NYC taxi dataset.},
   author   = {Chu, Lynna and Chen, Hao},
@@ -190,6 +212,15 @@
   year     = {2023}
 }
 
+@misc{Filonov2016,
+  archiveprefix = {arXiv},
+  author        = {Pavel Filonov and Andrey Lavrentyev and Artem Vorontsov},
+  eprint        = {1612.06676},
+  primaryclass  = {cs.LG},
+  title         = {Multivariate Industrial Time Series with Cyber-Attack Simulation: Fault Detection Using an LSTM-based Predictive Data Model},
+  year          = {2016}
+}
+
 @article{Garreau2018,
   abstract  = {In this paper we study the kernel change-point algorithm (KCP) proposed by Arlot, Celisse and Harchaoui [5], which aims at locating an unknown number of change-points in the distribution of a sequence of independent data taking values in an arbitrary set. The change-points are selected by model selection with a penalized kernel empirical criterion. We provide a non-asymptotic result showing that, with high probability, the KCP procedure retrieves the correct number of change-points, provided that the constant in the penalty is well-chosen; in addition, KCP estimates the change-points location at the optimal rate. As a consequence, when using a characteristic kernel, KCP detects all kinds of change in the distribution (not only changes in the mean or the variance), and it is able to do so for complex structured data (not necessarily in $\mathbb{R}^{d}$). Most of the analysis is conducted assuming that the kernel is bounded; part of the results can be extended when we only assume a finite second-order moment. We also demonstrate KCP on both synthetic and real data.},
   author    = {Damien Garreau and Sylvain Arlot},
@@ -234,6 +265,13 @@
   url      = {https://doi.org/10.1007/s10955-019-02392-3},
   volume   = {179},
   year     = {2020}
+}
+
+@inproceedings{Gross2000,
+  author = {Kenny C. Gross and Nela Zavaljevski and Kenny C. Gross},
+  title  = {Sensor fault detection in nuclear power plants using multivariate state estimation technique and support vector machines.},
+  url    = {https://api.semanticscholar.org/CorpusID:109371969},
+  year   = {2000}
 }
 
 @article{Gupta2022,
@@ -311,6 +349,13 @@
   year     = {2019}
 }
 
+@inproceedings{Hotelling1947,
+  author = {Harold Hotelling},
+  title  = {Multivariate Quality Control-illustrated by the air testing of sample bombsights},
+  url    = {https://api.semanticscholar.org/CorpusID:124795219},
+  year   = {1947}
+}
+
 @article{Jiao2018,
   abstract = {Change-point detection has a long history of research in statistical signal processing and remains a fundamental problem in many real-world applications involving information extraction from streaming data. Exploiting low-dimensional structures (subspace in particular) of high-dimensional signals is another research topic of significance, as it improves not only efficiency in computation, storage, and communication, but also interpretability and understanding of data. In this paper, we formulate the problem of subspace change-point detection, where a stream of high-dimensional data points lie on a low-dimensional subspace that abruptly changes at a certain time instant. Then, we propose a cumulative-sum-based algorithm for the task of detection in this problem setup. From the algorithmic perspective, the proposed method is computationally efficient, as it proceeds in an online and recursive manner, and each iteration involves simple matrix computation; it is also practical and flexible, as it works under mild conditions on the distribution of data points after change point. From the theoretical perspective, we derive rigorous performance bounds of the proposed algorithm in terms of false alarm rate and detection delay. We also conduct extensive numerical experiments on both synthetic and real-world data to validate effectiveness of our algorithm and correctness of theoretical analysis.},
   author   = {Jiao, Yuchen and Chen, Yanxi and Gu, Yuantao},
@@ -324,6 +369,21 @@
   title    = {Subspace Change-Point Detection: A New Model and Solution},
   volume   = {12},
   year     = {2018}
+}
+
+@article{JoeQin2003,
+  abstract = {Abstract This paper provides an overview and analysis of statistical process monitoring methods for fault detection, identification and reconstruction. Several fault detection indices in the literature are analyzed and unified. Fault reconstruction for both sensor and process faults is presented which extends the traditional missing value replacement method. Fault diagnosis methods that have appeared recently are reviewed. The reconstruction-based approach and the contribution-based approach are analyzed and compared with simulation and industrial examples. The complementary nature of the reconstruction- and contribution-based approaches is highlighted. An industrial example of polyester film process monitoring is given to demonstrate the power of the contribution- and reconstruction-based approaches in a hierarchical monitoring framework. Finally we demonstrate that the reconstruction-based framework provides a convenient way for fault analysis, including fault detectability, reconstructability and identifiability conditions, resolving many theoretical issues in process monitoring. Additional topics are summarized at the end of the paper for future investigation. Copyright © 2003 John Wiley \& Sons, Ltd.},
+  author   = {Joe Qin, S.},
+  doi      = {https://doi.org/10.1002/cem.800},
+  eprint   = {https://analyticalsciencejournals.onlinelibrary.wiley.com/doi/pdf/10.1002/cem.800},
+  journal  = {Journal of Chemometrics},
+  keywords = {process monitoring, process chemometrics, fault detection, fault identification, fault reconstruction, sensor validation, contribution plots, fault analysis},
+  number   = {8-9},
+  pages    = {480-502},
+  title    = {Statistical process monitoring: basics and beyond},
+  url      = {https://analyticalsciencejournals.onlinelibrary.wiley.com/doi/abs/10.1002/cem.800},
+  volume   = {17},
+  year     = {2003}
 }
 
 @misc{Katser2020,
@@ -410,6 +470,21 @@
   year      = {2015}
 }
 
+@inproceedings{Liu2008,
+  abstract  = {Most existing model-based approaches to anomaly detection construct a profile of normal instances, then identify instances that do not conform to the normal profile as anomalies. This paper proposes a fundamentally different model-based method that explicitly isolates anomalies instead of profiles normal points. To our best knowledge, the concept of isolation has not been explored in current literature. The use of isolation enables the proposed method, iForest, to exploit sub-sampling to an extent that is not feasible in existing methods, creating an algorithm which has a linear time complexity with a low constant and a low memory requirement. Our empirical evaluation shows that iForest performs favourably to ORCA, a near-linear time complexity distance-based method, LOF and random forests in terms of AUC and processing time, and especially in large data sets. iForest also works well in high dimensional problems which have a large number of irrelevant attributes, and in situations where training set does not contain any anomalies.},
+  author    = {Liu, Fei Tony and Ting, Kai Ming and Zhou, Zhi-Hua},
+  booktitle = {2008 Eighth IEEE International Conference on Data Mining},
+  doi       = {10.1109/ICDM.2008.17},
+  issn      = {2374-8486},
+  keywords  = {Application software;Credit cards;Detectors;Constraint optimization;Data mining;Information technology;Laboratories;Isolation technology;Performance evaluation;Astronomy;anomaly detection;outlier detection;novelty detection;isolation forest;binary trees;model based},
+  month     = {Dec},
+  number    = {},
+  pages     = {413-422},
+  title     = {Isolation Forest},
+  volume    = {},
+  year      = {2008}
+}
+
 @article{Liu2022,
   abstract = {With the rapid development of civil aviation, the number of airport flights is continually increasing and the low efficiency of flight ground services has become one of the main reasons for flight delays. Obtaining a precise description of the flight ground service network is of great importance to the efficient and safe operation of airports. In this study, we constructed a dynamic network model inference framework based on sliding window change point detection. First, a change point detection algorithm was proposed to divide all time points into two parts, namely, a set of possible change points and a set of completely impossible change points, which greatly reduces the true change point search space. Then, two novel change point elimination judgment rules were designed and combined with the structure learning algorithm to achieve iterative optimization within the possible change point sets, obtain the final true change points, and realize precise dynamic network inference. Based on the experimental results, our proposed method has a higher accuracy and computational efficiency than the state-of-the-art methods, and it can be easily adapted to large-scale datasets. Finally, the proposed model was used in an airport flight ground service analysis. Each day was divided into four stages and the potential dependence relationships between different nodes in each stage were accurately determined. Thus, the model has great practical significance for the accurate scheduling and efficient operation of airport ground services.},
   author   = {Chang Liu and YanRu Chen and FengHua Chen and Ping Zhu and LiangYin Chen},
@@ -457,6 +532,14 @@
   url       = {https://doi.org/10.1081/SAC-120017494},
   volume    = {32},
   year      = {2003}
+}
+
+@misc{Pavithra2020,
+  author       = {Pavithra, Vijay},
+  howpublished = {\url{https://keras.io/examples/timeseries/timeseries_anomaly_detection/}},
+  note         = {[Accessed 22-05-2024]},
+  title        = {{K}eras documentation: {T}imeseries anomaly detection using an {A}utoencoder --- keras.io},
+  year         = {2020}
 }
 
 @article{Prasadan2020,
@@ -690,4 +773,17 @@
   title    = {Self-Supervised Learning for Time Series Analysis: Taxonomy, Progress, and Prospects},
   volume   = {},
   year     = {2024}
+}
+
+@article{ZhangCh2019,
+  author  = {Zhang, Chuxu and Song, Dongjin and Chen, Yuncong and Feng, Xinyang and Lumezanu, Cristian and Cheng, Wei and Ni, Jingchao and Zong, Bo and Chen, Haifeng and Chawla, Nitesh V.},
+  doi     = {10.1609/aaai.v33i01.33011409},
+  journal = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  month   = {Jul.},
+  number  = {01},
+  pages   = {1409-1416},
+  title   = {A Deep Neural Network for Unsupervised Anomaly Detection and Diagnosis in Multivariate Time Series Data},
+  url     = {https://ojs.aaai.org/index.php/AAAI/article/view/3942},
+  volume  = {33},
+  year    = {2019}
 }
