@@ -7,6 +7,7 @@ Long-term deployment in systems with time-varying characteristics connected to f
 
 Firstly, when new snapshots are available, CPD-DMD updates the low-rank subspace over which the signal evolves. Secondly, the algorithm projects two stored windows of snapshot pairs, referred to as base and test matrices, onto the subspace to evaluate the reconstruction error. Finally, by comparing the reconstruction error between the base and test matrices, the algorithm computes the change-point statistics.
 
+% \subsection{System Parameters}
 \subsection{Data Stream Management}
 Efficient execution of the algorithm requires preprocessing incoming data streams and managing the history of snapshots to compute the change-point statistics. Algorithm~\ref{alg:preprocessing} shows a single pass of the data preprocessing and management procedure. This procedure is executed for each available snapshot pair or in mini-batches of varying frequency and size. First, incoming snapshots are formed into time-delayed embeddings of a predefined number of delays \( h \), as shown in Eq.~\eqref{eq:hankel}. Next, the time-delayed embedding of one-step delayed snapshots \( X^\prime_{h, k: k + j} \) is compensated by control action if the control matrix \( B \) is known, or the time-delayed embedding \( X_{h, k: k + j} \) is augmented with control actions \( \Theta_{h, k: k + j} \) to form the augmented matrix \( \bar{X}_{h, k: k + j} \).
 

@@ -361,14 +361,16 @@ The truncation is performed by projecting the snapshots onto the first \(r\) POD
 
 What follows, is the update of reduced matrices \(\tilde{A}_k\) and \(\tilde{P}_k\) using truncated snapshots \(\tilde{X}_k\) and \(\tilde{X}^\prime_k\). The updates could be performed conveniently using proposed formulae in Eq.~\eqref{eq:precision-matrix-update} and Eq.~\eqref{eq:online-dmd-update} without modification.
 
-\subsection{Hankel DMD}
+\subsection{Hankel DMD}\label{sec:hankel-dmd}
 Hankel DMD addresses several key problems in analyzing dynamical systems, particularly when dealing with complex, certain non-linear, or controlled systems with unknown time delays. The main idea is to construct a Hankel matrix from the data matrix \(X\) by embedding delay coordinates forming a Hankel matrix \(\bar{X}_{h, c}\). The Hankel matrix is then decomposed using DMD to find the low-rank representation of the system. Given snapshots \({\{x(t_i)\}}^c_{i=0}\), the \(h\)-times delayed embedding matrix \(\bar{X}_{h, c}\) of shape \(m + h \times c\) is formed as
 \begin{equation}\label{eq:hankel}
 	\bar{X}_{h, c} = \begin{bmatrix}
-		x_0    & x_c       & \cdots & x_{c - h} \\
+		x_0    & x_1       & \cdots & x_{c - h} \\
 		\vdots & \vdots    & \ddots & \vdots    \\
 		x_{h}  & x_{h + 1} & \cdots & x_{c},
 	\end{bmatrix}
 \end{equation}
 
-which can be combined with rank-one updates by storing and vertically stacking snapshots \({\{x(t_i)\}}^{k+c}_{i=k}\) at each time step \(k\) and passing it to updates of DMD.~The updates of DMD, once again, employ Eq.~\eqref{eq:precision-matrix-update} and Eq.~\eqref{eq:online-dmd-update}  providing time delayed embedding of snapshots pair \(\bar{X}_{h, c}\) and \(\bar{X}^\prime_{h, c}\).
+which can be combined with rank-one updates by storing and vertically stacking snapshots \({\{x(t_i)\}}^{k+c}_{i=k}\) at each time step \(k\) and passing it to updates of DMD.~This will allow setting larger number of time-delays, in case we wish to have \(h > c\). For particularly large systems with slow dynamics, we may specify delay steps along with total time-delay to find a balance between computational cost and accuracy of capturing the system dynamics. This simply means that our embedding will be composed of snapshots \( [x_0, x_{h_d}, \ldots, x_h] \), sampled at the time intervals specified by the delay steps.
+
+The updates of DMD, once again, employ Eq.~\eqref{eq:precision-matrix-update} and Eq.~\eqref{eq:online-dmd-update}  providing time delayed embedding of snapshots pair \(\bar{X}_{h, c}\) and \(\bar{X}^\prime_{h, c}\).
