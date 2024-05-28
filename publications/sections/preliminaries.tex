@@ -1,4 +1,4 @@
-This section presents the theoretical background of the proposed method. We start with the definition of Dynamic Mode Decomposition (DMD) and its online and extended online versions. We then introduce the online Singular Value Decomposition (SVD) algorithm, which enables finding lower rank representation less expensively. Finally, we present the proposed method for truncating the DMD matrix to a lower rank online.
+This section presents the theoretical background of the proposed method. We start with the definition of Dynamic Mode Decomposition (DMD) and its online and extended online versions. We then describe utilization of the online Singular Value Decomposition (SVD) algorithm, which enables finding lower rank representation less expensively. Finally, we present the proposed method for truncating the DMD matrix to a lower rank online.
 
 \subsection{DMD}\label{sec:dmd}
 Dynamic Mode Decomposition (DMD), introduced in \citet{Schmid2010}, is a technique with broad application in data sequence analysis. The use cases span discriminating dominant signal and noise components from high-dimensional measurements, revealing coherent structures, and modeling dynamic behavior via system identification. The DMD was found to be closely related to Koopman theory by \citet{Rowley2009}, revealing perhaps the most interesting property of representing a non-linear system as a set of linear governing equations, which enabled its combination with nominal MPC and other techniques where optimization problem could be significantly simplified by finding linear representation of the system albeit increased dimensionality of the model. Various modifications of DMD further broadened its utilization and underpinned its essential place in system identification and control theory \citep{Schmid2022}.
@@ -9,7 +9,7 @@ The DMD algorithm amis to find the optimal linear operator \(A\) that advances t
 \end{equation}
 where matrices \(X \in \mathbb{C}^{m \times n}\) and \(X^\prime \in \mathbb{C}^{m \times n}\) represent \(n\) consecutive snapshot pairs \({\{x(t_i), x(t_i^\prime )\}}^n_{i=1}\), where \(t_i^\prime = t_i + \Delta t\).
 
-Presented exact algorithm for DMD, proposed in \citet{Tu2013}, that does not rely on the assumption of uniform sampling, favorable property in industrial data streams. While enabling irregular sampling, time steps \(\Delta t\) must be sufficiently small to capture the highest frequency dynamics.
+\citet{Tu2013} proposed an exact algorithm for solving Eq.~\ref{eq:best-fit-operator}, that does not rely on the assumption of uniform sampling, favorable property in industrial data streams. While enabling irregular sampling, time steps \(\Delta t\) must be sufficiently small to capture the highest frequency dynamics.
 
 \subsection{Algorithm for DMD}
 DMD utilizes the computationally efficient singular value decomposition (SVD) of \(X\) to provide a low-rank representation of high-dimensional systems.
@@ -17,7 +17,7 @@ DMD utilizes the computationally efficient singular value decomposition (SVD) of
 \begin{equation}\label{eq:svd}
 	X = \tilde{U} \tilde{\Sigma} \tilde{V}^\top,
 \end{equation}
-where \(\tilde{U} \in \mathbb{C}^{m \times r}\) are propoer orthogonal decomposition (POD) modes, \(\tilde{\Sigma} \in \mathbb{C}^{r \times r}\) are the singular values, and \( \tilde{V} \in \mathbb{C}^{n \times r}\) are right orthogonal singular vectors. Rank \(r \leq m\) denotes either the full or the approximate rank of the data matrix \(X\).
+where \(\tilde{U} \in \mathbb{C}^{m \times r}\) are proper orthogonal decomposition (POD) modes, \(\tilde{\Sigma} \in \mathbb{C}^{r \times r}\) are the singular values, and \( \tilde{V} \in \mathbb{C}^{n \times r}\) are right orthogonal singular vectors. Rank \(r \leq m\) denotes either the full or the approximate rank of the data matrix \(X\).
 
 Employing Eq.~\ref{eq:svd} we may rewrite Eq.~\ref{eq:best-fit-operator} as
 \begin{equation*}
@@ -30,13 +30,13 @@ and project \(A\) onto the POD modes \(\tilde{U}\) to obtain low rank representa
 \end{equation}
 
 Unlike SVD, which focuses on spatial correlation and energy content, DMD incorporates temporal information via spectral decomposition of the matrix \(\tilde{A}\) as
-\begin{equation}
+\begin{equation}\label{eq:dmd-modes}
 	\tilde{A} W = W \Lambda.
 \end{equation}
 
 where diagonal elements of \(\Lambda \), \({\{\lambda}_0, {\lambda}_1, \ldots, {\lambda}_r\} \), are the DMD eigenvalues, and columns of \(W\) are the DMD modes.
 
-Projection onto POD modes in Eq.~\ref{eq:projected-operator} preserves the non-zero eigenvalues of the full matrix \(A\), removing the necessity of working with the high-dimensional \(A\) matrix.
+Projection onto POD modes in Eq.~\ref{eq:projected-operator} preserves the non-zero eigenvalues of the full matrix \(A\), removing the necessity of working with the high-dimensional \(A\) matrix in Eq.~\ref{eq:dmd-modes}.
 
 DMD modes represent linear combinations of POD mode amplitudes with consistent linear behavior over time, offering insights into temporal evolution, thus combining the advantages of SVD for spatial dimensionality reduction and FFT for identifying temporal frequencies. Each DMD mode is linked to a specific eigenvalue \(\lambda = a + ib\), indicating growth or decay rate \(a\) and oscillation frequency \(b\).
 
@@ -64,12 +64,12 @@ Lastly, to reconstruct the full-dimensional DMD modes \(\Phi \) from reduced DMD
 In cases where \(n >> m\), we may seek more efficient reconstruction of the full-dimensional DMD modes using projected modes \(\Phi = \tilde{U} W\) while losing guarantees of finding the exact eigenvectors of \(A\) \citep{Schmid2010}.
 
 \subsection{Online DMD}
-In most practical applications, sufficient data may not be available on demand but instead become available in a real-time or streaming manner. In this relevant case, we can update the underlying decomposition of the data matrix \(X\) over time. Moreover, many complex systems in nature or engineered ones exhibit time-varying dynamics, under the influence of environmental or operational factors, that we may wish to track over time to maintain the models validity.
+In most practical applications, sufficient data may not be available on demand but instead become available in a real-time or streaming manner. Moreover, many complex systems in nature or engineered ones exhibit time-varying dynamics, under the influence of environmental or operational factors, that we may wish to track over time to maintain the models validity. In this relevant cases, we can update the underlying decomposition of the data matrix \(X\) over time.
 
-Recently, an active way of updating exact DMD in streaming applications was proposed by \citet{Zhang2019}, providing extensive variations to improve tracking of time-varying dynamics without storing the full data matrix \(X\).
+Recently, an attractive way of updating exact DMD in streaming applications was proposed by \citet{Zhang2019}, providing extensive variations to improve tracking of time-varying dynamics without storing the full data matrix \(X\).
 
 \subsection{Algorithm for online DMD updates}\label{sec:online-dmd-updates}
-The initial requirement of online DMD updates in \citet{Zhang2019} is the availability of \(A_{k}\). In some instances, we may have recorded (or sufficient time to record) the history of snapshots \(X_k\) up to time step \(k\) enabling initialization of \(A_k\) using the standard DMD algorithm presented in Section~\ref{sec:dmd}. Conversely, the authors propose convergence from any random initialization of \(A_k\) to the true DMD matrix in sufficient time\citep{Zhang2019}. In our experience, using an identity matrix to initialize \(A_k\) worked well in practice.
+The initial requirement of online DMD updates in \citet{Zhang2019} is the availability of \(A_{k}\). In some instances, we may have recorded (or sufficient time to record) the history of snapshots \(X_k\) up to time step \(k\) enabling initialization of \(A_k\) using the standard DMD algorithm presented in Section~\ref{sec:dmd}. Conversely, the authors propose convergence from any random initialization of \(A_k\) to the true DMD matrix in sufficient time~\citep{Zhang2019}. Initializing \(A_k\) with identity matrix works well in practice.
 
 Based on the upstream message queuing service, new pairs of snapshots may become available in real-time or delayed in mini-batches as
 \begin{equation}
@@ -80,7 +80,7 @@ We further develop this generalized formulation to an arbitrary number of snapsh
 
 We wish to find an updated matrix \(A_{k+c}\), assuming it is close to \(A_{k}\), enabling the formulation of the problem as recursive least-squares estimation\citep{Zhang2019}.
 
-Under the assumption, that the history of snapshots \(X_k\) has rank \(m\), the matrix \(X_k X_k^\top \) is symmetric and strictly positive definite and has a well-defined inversion, and we may rewrite Eq.~\eqref{eq:best-fit-operator} as
+Under the assumption, that the history of snapshots \(X_k\) has rank \(m\), and the matrix \(X_k X_k^\top \) is symmetric and strictly positive definite and has a well-defined inversion, we may rewrite Eq.~\eqref{eq:best-fit-operator} as
 \begin{equation}\label{eq:pseudo-inverse}
 	A_k = X^\prime_k X_k^+ = X^\prime_k X_k^\top {(X_k X_k^\top)}^{-1} = Q_k P_k,
 \end{equation}
@@ -114,22 +114,22 @@ As both matrices, \(C_{k: k + c}\) \(P_k\) are invertible square matrices due to
 where
 
 \begin{equation}
-	\Gamma_{k : k + c} = {(C_{k : k + c}^{-1} + X_{k : k + c}^\top P_k X_{k : k + c})}^{-1}
+	\Gamma_{k : k + c} = {(C_{k : k + c}^{-1} + X_{k : k + c}^\top P_k X_{k : k + c})}^{-1}.
 \end{equation}
 
-where \(\Gamma_{k : k + c}^{-1}\) is non-zero due to the positive definiteness of \(P_k\), if for all diagonal elements of \(C_{k : k + c}\) applies \( \forall i : c_{ii} \neq 0 \). The inversion of matrix \(C_{k: k + c}\) can be efficiently computed as residuals of diagonal elements.
+\(\Gamma_{k : k + c}^{-1}\) is always non-zero due to the positive definiteness of \(P_k\), if for all diagonal elements of \(C_{k : k + c}\) applies \( \forall i : c_{ii} \neq 0 \). The inversion of matrix \(C_{k: k + c}\) can be efficiently computed as residuals of diagonal elements.
 
 The final closed-loop form of the updated DMD matrix is then
 \begin{equation}\label{eq:online-dmd-update}
 	A_{k+c} = A_k + (X^\prime_{k : k+c} - A_k X_{k+c}) \Gamma_{k+c} X_{k : k+c}^\top P_k,
 \end{equation}
 
-where \((X^\prime_{k : k+c} - A_k X_{k+c})\) represents the prediction error. The DMD matrix is updated by adding a term proportional to this error, reflecting the data's covariance structure and variable importance.
+where \((X^\prime_{k : k+c} - A_k X_{k+c})\) represents the prediction error. The DMD matrix is updated by adding a term proportional to this error, reflecting the data's covariance structure and variable importance through \(C_{k : k + c}\).
 
 \subsection{Reverting Online DMD}
 The DMD updates presented in the previous section enable calibration of the DMD modes in scenarios where available snapshots are limited. However, in time-varying systems, the previous snapshots may become invalid and reduce the validity of the found model. In such cases, it may be desirable to revert the DMD matrix to the state it would have been in if the old snapshots had never been included.
 
-To make DMD matrix forget first snapshots seen \( \{X_{c}, X^\prime_{c}\} = {\{x(t_i), x(t_i^\prime )\}}^c_{i=0}\), we simply use the update formulas from Eq.~\eqref{eq:precision-matrix-update} and Eq.~\eqref{eq:online-dmd-update} providing negative value of their original weights \(-C_{c}\).
+To make DMD matrix forget first snapshots seen \( \{X_{c}, X^\prime_{c}\} = {\{x(t_i), x(t_i^\prime )\}}^c_{i=0}\), we simply use the update formulae from Eq.~\eqref{eq:precision-matrix-update} and Eq.~\eqref{eq:online-dmd-update} providing negative value of their original weights \(-C_{c}\).
 
 This means that the history of snapshot pairs \({\{x(t_i), x(t_i^\prime )\}}^{k+c}_{i=0}\) must be stored until they are reverted. This window might be significantly smaller than all the previously seen data, saving computational resources and memory.
 
@@ -139,14 +139,14 @@ In industrial automation, complex systems to which external control is applied a
 \begin{equation}\label{eq:linear-system}
 	X_{k+1} = A_k X_{k} + B_k \Theta_{k},
 \end{equation}
-where \(X_k \in \mathbb{R}^{m \times c}\), \(\Theta_k \in \mathbb{R}^{l \times c}\) are the states and control inputs, respectively, \(A_k \in \mathbb{R}^{m \times m}\) is the state matrix, \(B_k \in \mathbb{R}^{m \times l}\) is the control matrix.
+where \(X_k \in \mathbb{R}^{m \times c}\), \(\Theta_k \in \mathbb{R}^{l \times c}\) are the states and control inputs, respectively, \(A_k \in \mathbb{R}^{m \times m}\) is the state matrix, and \(B_k \in \mathbb{R}^{m \times l}\) is the control matrix.
 
 For known control matrix \(B\), the control input may be incorporated into the DMD matrix by simply compensating the output snapshots \(X^\prime_k\) with the control input multiplied by the control matrix \(B\) as
 \begin{equation}\label{eq:control-compensation}
 	\bar{X}^\prime_k = X^\prime_k - B \Theta_k,
 \end{equation}
 
-and use the \(\bar{X}^\prime_k\) in place of \(X^\prime_k\) in the same update formula~\eqref{eq:precision-matrix-update} and~\eqref{eq:online-dmd-update}.
+and use the \(\bar{X}^\prime_k\) in place of \(X^\prime_k\) in the update formulae~\eqref{eq:precision-matrix-update} and~\eqref{eq:online-dmd-update}.
 
 In most scenarios, neither internal structure \(A\) nor the effect of control \(B\) are known. In such cases, the system identification problem may be solved by augmenting the state matrix \(A\) with the control matrix \(B\) as
 % TODO: Denote that in an unsupervised manner, we deal with one-step delayed updates
@@ -154,7 +154,7 @@ In most scenarios, neither internal structure \(A\) nor the effect of control \(
 	\bar{A}_k = \begin{bmatrix} A_k & B_k \end{bmatrix}, \quad \bar{X}_k = \begin{bmatrix} X_k \\ \Theta_k \end{bmatrix} ,
 \end{equation}
 
-where \(\bar{A}_k \in \mathbb{R}^{m \times m + l}\), \(\bar{X}_k \in \mathbb{R}^{m + l \times c}\) are the augumented matrices of \(A_k\) and \(X_k\) we may write~\eqref{eq:linear-system} in the form
+where \(\bar{A}_k \in \mathbb{R}^{m \times m + l}\), \(\bar{X}_k \in \mathbb{R}^{m + l \times c}\) are the augumented matrices of \(A_k\) and \(X_k\). We may write~\eqref{eq:linear-system} in the form
 \begin{equation*}
 	X^\prime_k = \bar{A}_k \bar{X}_k.
 \end{equation*}
@@ -164,7 +164,7 @@ Similarly to DMD, the matrices \(A_k\) and \(B_k\) may then be found by minimizi
 	\bar{A}_k = X^\prime_k \bar{X}_k^+.
 \end{equation*}
 
-At time \(k+c\), we incorporate \(c\) new columns into \(\bar{X}_k\) and \(X^\prime_k\), and aim to update \(\bar{A}_{k+c}\) utilizing our prior knowledge of \(\bar{A}_k\). By applying the same method as in Section~\ref{sec:online-dmd-updates}, extending the online DMD to this scenario is straightforward. Specifically, the square matrix \(A_k\) from the DMD is replaced in DMDc with the rectangular matrix \(\bar{A}_k\) defined earlier, and the matrix \(X_k\) in the formulas is substituted with the matrix \(\bar{X}_k\)~\citep{Zhang2019}.
+At time \(k+c\), we incorporate \(c\) new columns into \(\bar{X}_k\) and \(X^\prime_k\), and aim to update \(\bar{A}_{k+c}\) utilizing our prior knowledge of \(\bar{A}_k\). By applying the same method as in Section~\ref{sec:online-dmd-updates}, extending the online DMD to this scenario is straightforward. Specifically, the square matrix \(A_k\) from the DMD is replaced in DMDc with the rectangular matrix \(\bar{A}_k\) defined earlier, and the matrix \(X_k\) in the formulae~\eqref{eq:precision-matrix-update} and~\eqref{eq:online-dmd-update} is substituted with the matrix \(\bar{X}_k\)~\citep{Zhang2019}.
 
 \subsection{Truncating Online DMD with Control}\label{sec:truncating-online-dmd}
 One of the challenges of exact DMD is the lack of robustness to noise, bad scalability, and decreased numerical stability of small eigenvalue updates. To address this issue, we propose modifying the online DMD algorithm that truncates the DMD matrix to a lower rank. Conventionally, this process relies on the truncated singular value decomposition (SVD) method, which is widely used in data analysis to reduce the dimensionality of data while preserving the most important information. Nevertheless, computing the SVD of the matrix \(X_k\) is computationally expensive and unsuitable for online learning. Instead, we employ online SVD algorithms that perform low-rank updates of the SVD as new snapshots \(X_k\) become available. We use the algorithm of \citet{Zhang2022}, a modified version of the originally proposed algorithm by \citet{Brand2006}. The main benefit of this modification is the reorthogonalization rule, which prevents erosion of left singular values orthogonality at a reasonable computational cost. For the details on the algorithm, please refer to the original work of author \citep{Zhang2022}. For consistency of nomenclature, we will refer to the SVD decomposition of the augmented matrix \(\bar{X}_k\) as
@@ -172,7 +172,7 @@ One of the challenges of exact DMD is the lack of robustness to noise, bad scala
 	\bar{X}_k = \tilde{U}_k \tilde{\Sigma}_k \tilde{V}_k^\top.
 \end{equation*}
 
-The new snapshots \(\bar{X}_{k+c}\) may be used for updating the Online SVD as shown in Algorithm~\ref{alg:online-svd-updates}.
+The new snapshots \(\bar{X}_{k+c}\) may be used for updating the Online SVD as shown in Algorithm~\ref{alg:online-svd-updates}. Old snapshots may be reverted using Algorithm~\ref{alg:online-svd-reverts}.
 
 \begin{algorithm}[H]
 	\caption{{Online SVD Updates}}\label{alg:online-svd-updates}
@@ -356,13 +356,13 @@ The reduced-order matrices \(\tilde{\bar{A}}_k\) and \(\tilde{P}_k\) are aligned
 
 The truncation is performed by projecting the snapshots onto the first \(r\) POD modes as
 \begin{equation}
-	\{\tilde{\bar{X}}_k, \tilde{X}^\prime_k\} = \{\bar{X}_k\tilde{U}_k, X^\prime_k\tilde{U}_k(:m, 1:p)\}
+	\{\tilde{\bar{X}}_k, \tilde{X}^\prime_k\} = \{\tilde{U}^\top_k\bar{X}_k, \tilde{U}^\top_k(:m, 1:p)X^\prime_k\}
 \end{equation}
 
 What follows, is the update of reduced matrices \(\tilde{A}_k\) and \(\tilde{P}_k\) using truncated snapshots \(\tilde{X}_k\) and \(\tilde{X}^\prime_k\). The updates could be performed conveniently using proposed formulae in Eq.~\eqref{eq:precision-matrix-update} and Eq.~\eqref{eq:online-dmd-update} without modification.
 
 \subsection{Hankel DMD}\label{sec:hankel-dmd}
-Hankel DMD addresses several key problems in analyzing dynamical systems, particularly when dealing with complex, certain non-linear, or controlled systems with unknown time delays. The main idea is to construct a Hankel matrix from the data matrix \(X\) by embedding delay coordinates forming a Hankel matrix \(\bar{X}_{h, c}\). The Hankel matrix is then decomposed using DMD to find the low-rank representation of the system. Given snapshots \({\{x(t_i)\}}^c_{i=0}\), the \(h\)-times delayed embedding matrix \(\bar{X}_{h, c}\) of shape \(m + h \times c\) is formed as
+Hankel DMD addresses several key problems in analyzing dynamical systems, particularly when dealing with certain complex, non-linear, or controlled systems with unknown time delays. The main idea is to construct a Hankel matrix from the data matrix \(X\) by embedding delay coordinates forming a Hankel matrix \(\bar{X}_{h, c}\). The Hankel matrix is then decomposed using DMD to find the low-rank representation of the system. Given snapshots \({\{x(t_i)\}}^c_{i=0}\), the \(h\)-times delayed embedding matrix \(\bar{X}_{h, c}\) of shape \(m + h \times c\) is formed as
 \begin{equation}\label{eq:hankel}
 	\bar{X}_{h, c} = \begin{bmatrix}
 		x_0    & x_1       & \cdots & x_{c - h} \\
@@ -371,6 +371,6 @@ Hankel DMD addresses several key problems in analyzing dynamical systems, partic
 	\end{bmatrix}
 \end{equation}
 
-which can be combined with rank-one updates by storing and vertically stacking snapshots \({\{x(t_i)\}}^{k+c}_{i=k}\) at each time step \(k\) and passing it to updates of DMD.~This will allow setting larger number of time-delays, in case we wish to have \(h > c\). For particularly large systems with slow dynamics, we may specify delay steps along with total time-delay to find a balance between computational cost and accuracy of capturing the system dynamics. This simply means that our embedding will be composed of snapshots \( [x_0, x_{h_d}, \ldots, x_h] \), sampled at the time intervals specified by the delay steps.
+which can be combined with rank-one updates by storing and vertically stacking snapshots \({\{x(t_i)\}}^{k+c}_{i=k}\) at each time step \(k\) and passing it to updates of DMD.~This will allow setting larger number of time-delays, in case we wish to have \(h > c\). For particularly large systems with slow dynamics, we may specify delay steps \(h_d\) along with total time-delay to find a balance between computational cost and accuracy of capturing the system dynamics. This simply means that our embedding will be composed of snapshots \( [x_0, x_{h_d}, \ldots, x_h] \), sampled at the time intervals specified by the delay steps.
 
 The updates of DMD, once again, employ Eq.~\eqref{eq:precision-matrix-update} and Eq.~\eqref{eq:online-dmd-update}  providing time delayed embedding of snapshots pair \(\bar{X}_{h, c}\) and \(\bar{X}^\prime_{h, c}\).
