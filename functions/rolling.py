@@ -121,8 +121,8 @@ class Rolling(R):
     def __init__(self, obj, window_size):
         super().__init__(obj, window_size)
 
-    def learn_one(self, x, y=None):
-        self.update(x)
+    def learn_one(self, *args, **kwargs):
+        self.update(*args, **kwargs)
 
     def update_many(self, *args, **kwargs):
         # First arg defines the number of samples to update
@@ -134,12 +134,12 @@ class Rolling(R):
             args_kwargs = [self.window[i] for i in range(n_revert)]
             args_old, kwargs_old = separate_args_kwargs(args_kwargs)
             if hasattr(self.obj, "revert_many"):
-                self.obj.revert_many(*args_old, **kwargs_old)
+                self.obj.revert_many(*args_old, **kwargs_old)  # type: ignore
             else:
                 # In this case revert should support multiple samples
                 self.obj.revert(*args_old, **kwargs_old)
         if hasattr(self.obj, "update_many"):
-            self.obj.update_many(*args, **kwargs)
+            self.obj.update_many(*args, **kwargs)  # type: ignore
         else:
             # In this case update should support multiple samples
             self.obj.update(*args, **kwargs)
