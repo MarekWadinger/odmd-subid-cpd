@@ -26,9 +26,9 @@ The proposed method is compared to the one proposed by \citet{Kawahara2007} usin
     \end{tabular}
 \end{table}
 
-The results, presented in Figure~\ref{fig:artificial_steps_detection}, show that while no method identified the first change-point at snapshot 1000, DMD-CPD discriminates minor change-points around the first operation point, with decreasing change-point statistics for subsequent detections. This decrease can be explained by the significant increase in absolute error between the original and reconstructed data, compared to the relative error between base and test sets, which decreases the residual of their division. Computing the difference of test and base set reconstruction errors, gives evidence to previous explanation. This relation of energy of the change-point detection to the actual dissimilarity of the data is a significant advantage of the proposed method over the deep learning techniques~\citep{DeRyck2021}. To sum up, the absolute dissimilarity of the data is reflected in the difference of the errors, while the relative dissimilarity is reflected in the error ratio.
+The results, presented in Figure~\ref{fig:artificial_steps_detection}, show that while no method identified the first change-point at snapshot 1000, DMD-CPD discriminates minor change-points around the first operation point, with decreasing change-point statistics for subsequent detections. This decrease can be explained by the significant increase in absolute error between the original and reconstructed data for both base and test set, compared to their relative error, which decreases the residual of their division. Computing the difference of test and base set reconstruction errors, gives evidence to previous explanation. This relation of energy of the change-point detection to the actual dissimilarity of the data is a significant advantage of the proposed method over the deep learning techniques~\citep{DeRyck2021}. To sum up, the absolute dissimilarity of the data is reflected in the difference of the errors, while the relative dissimilarity is reflected in the error ratio.
 
-The proposed method has a similar shape of statistics for error differencing to the error ratio statistics as the method proposed in \citet{Kawahara2007}, but with significantly better recognition of minor change points around the center of the dataset.
+The proposed method has a similar shape of statistics for error differencing to the error ratio statistics as the method proposed in \citet{Kawahara2007}, but with significantly better recognition of minor change points around the center of the dataset and lower noise.
 
 In both cases, the peak of the change-point statistics is delayed by \(c\) snapshots, which is expected due to the nature of CPD-DMD.~The exact delay allows for precisely pinpointing the change-point time from the data.
 
@@ -104,7 +104,7 @@ In this section, we compare the performance of the proposed method with commonly
     \end{tabular}
 \end{table}
 
-The evaluation is performed using NAB metrics presented in the work of~\citet{Ahmad2017}. These metrics operate over a window of snapshots. This window is centered around the change point to establish metrics for reference methods. Nevertheless, from the definition of the change-point and the utilization of the window for scoring (please refer to the paper by~\citet{Lavin2015}), it is evident that the perfect detector should detect a change-point half of the window size snapshots before the change-points actual occurrence. Since the start of the transition towards the faulty state is marked as anomalous in the dataset, as seen in Figure~\ref{fig:scab_interpretation}, we stipulate that the detection before the start of the transition should be regarded as a false positive. Therefore, we modify the original evaluation metrics to observe the snapshots window after the change-point and evaluate the models' performance.
+The evaluation is performed using NAB metrics presented in the work of~\citet{Ahmad2017}. These metrics operate over a window of snapshots. In the leaderboard proposed in~\citet{Katser2020}, window is centered around the change point to establish metrics for reference methods. Nevertheless, from the definition of the change-point and the utilization of the window for scoring (please refer to the paper by~\citet{Lavin2015}), it is evident that the detector alerting a change-point half of the window size snapshots before the change-point actual occurrs is considered perfect. Since the start of the transition towards the faulty state is marked as anomalous in the dataset, as seen in Figure~\ref{fig:scab_interpretation}, we stipulate that the detection before the start of the transition should be regarded as a false positive. Therefore, we modify the original evaluation metrics to observe the snapshots window after the change-point and evaluate the models' performance.
 
 To ensure reproducibility and consistency, we created a fork of the original repository available at \url{https://github.com/MarekWadinger/SKAB}.
 
@@ -114,39 +114,38 @@ To ensure reproducibility and consistency, we created a fork of the original rep
     \caption{Description of anomaly mode, transition, and positions of marked change points.}\label{fig:scab_interpretation}
 \end{figure}
 
-The results of experiments with modified evaluation, presented in Table~\ref{table:skab_cpd_comparison-own}, show that the proposed method outperforms the reference methods in terms of standard NAB score except MSCRED.~Nevertheless, it has a lower false positive rate than MSCRED, which is presented in terms of both score and the number of false positives. Conv-AE, LSTM-AE, and Isolation Forest all present a far lower number of false positives than the proposed method. The difference in the low FP metric is insignificant, indicating a longer duration of false alarms. Our proposed method and MSCRED have the lowest number of missed change points, making them more suitable methods for safety-critical systems where missed alarms may result in catastrophic consequences. Four variants of proposed method are evaluated to show influence of threshold selection and different error representations. Based on closeness of the results we claim, that the selection of threshold value, which is challenging for non-probabilistic approaches to CPD where CPD statistics has no proper normalization, does not significantly impact performance. Perhaps most interesting is the score of the perfect detector, which is not 100 as expected. This indicates that the standard NAB score does not guarantee a 100 for a perfect detector for various evaluation criteria, which is essential to consider when evaluating the relative performance of the methods with respect to the perfect detector under these criteria.
+The results of experiments, presented in Table~\ref{table:skab_cpd_comparison-own}, show that the proposed method outperforms the reference methods in terms of standard NAB score except MSCRED.~Nevertheless, it has a lower false positive rate than MSCRED, which is presented in terms of both score and the number of false positives. Conv-AE, LSTM-AE, and Isolation Forest all present a far lower number of false positives than the proposed method. The difference in the low FP metric is insignificant, indicating a longer duration of false alarms. Our proposed method and MSCRED have the lowest number of missed change points, making them more suitable methods for safety-critical systems where missed alarms may result in catastrophic consequences. Four variants of proposed method are evaluated to show influence of threshold selection and different error representations. Based on closeness of the results we claim, that the selection of threshold value, which is challenging for non-probabilistic approaches to CPD where CPD statistics has no proper normalization, does not significantly impact performance. Perhaps most interesting is the score of the perfect detector, which is not 100 as expected. This indicates that the standard NAB score does not guarantee a 100 for a perfect detector for various evaluation criteria, which is essential to consider when evaluating the relative performance of the methods with respect to the perfect detector under these criteria.
 
 \begin{table}[H]
-    \caption{Comparison of different algorithms based on NAB metrics. Two highest scores are highlighted}\label{table:skab_cpd_comparison-own}
+    \caption{Comparison of different algorithms based on NAB metrics. Best scores are highlighted.}\label{table:skab_cpd_comparison-own}
     \centering
     \begin{tabular}{l *3{S[table-format=3.2]} *2{S[table-format=3.0]}}
         \toprule
-        \textbf{Algorithm}           &
-        \multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                                           \\ (standard)} &
-        \multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                                           \\ (low FP)} &
-        \multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                                           \\ (low FN)} &
-        \textbf{FNs}                 &
+        \textbf{Algorithm}       &
+        \multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                                       \\ (standard)} &
+        \multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                                       \\ (low FP)} &
+        \multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                                       \\ (low FN)} &
+        \textbf{FNs}             &
         \textbf{FPs}
         \\
         \midrule
-        Perfect detector             & 54.77          & 54.11          & 56.99          & 49          & 0           \\
+        Perfect detector         & 54.77          & 54.11          & 56.99          & 49          & 0           \\
         \midrule
-        MSCRED                       & \textbf{32.42} & 16.53          & \textbf{40.28} & \textbf{55} & 342         \\
-        \textbf{CPD-DMD (alt.)}      & \textbf{30.29} & 18.31          & \textbf{37.78} & \textbf{60} & 250         \\
-        \textbf{CPD-DMD (t=0)}       & 29.68          & 17.48          & 37.37          & \textbf{60} & 254         \\
-        \textbf{CPD-DMD (alt., t=0)} & 29.68          & 17.48          & 37.37          & \textbf{60} & 254         \\
-        \textbf{CPD-DMD}             & 39.84          & 23.66          & 50.18          & 37          & 336         \\  % ref 120, test 60
-        Isolation forest             & 26.16          & 19.50          & 30.82          & 76          & 135         \\
-        T-squared+Q (PCA)            & 25.35          & 14.51          & 31.33          & 72          & 232         \\
-        Conv-AE                      & 23.61          & \textbf{21.54} & 27.55          & 82          & \textbf{23} \\
-        LSTM-AE                      & 23.51          & \textbf{20.11} & 25.91          & 88          & 69          \\
-        T-squared                    & 19.54          & 10.20          & 24.31          & 70          & 106         \\
-        MSET                         & 13.84          & 10.22          & 17.37          & 96          & \textbf{66} \\
-        Vanilla AE                   & 11.41          & 6.53           & 13.91          & 103         & 106         \\
-        Vanilla LSTM                 & 11.31          & -3.80          & 17.25          & 90          & 342         \\
+        \textbf{CPD-DMD (t=0)}   & \textbf{34.29} & 23.21          & \textbf{42.54} & \textbf{52} & 221         \\
+        \textbf{CPD-DMD (t=0.5)} & 30.6           & 20.95          & 38.51          & 58          & 187         \\
+        \textbf{CPD-DMD}         & 33.43          & \textbf{23.28} & 41.71          & 53          & 197         \\
+        MSCRED                   & 32.42          & 16.53          & 40.28          & 55          & 342         \\
+        Isolation forest         & 26.16          & 19.50          & 30.82          & 76          & 135         \\
+        T-squared+Q (PCA)        & 25.35          & 14.51          & 31.33          & 72          & 232         \\
+        Conv-AE                  & 23.61          & 21.54          & 27.55          & 82          & \textbf{23} \\
+        LSTM-AE                  & 23.51          & 20.11          & 25.91          & 88          & 69          \\
+        T-squared                & 19.54          & 10.20          & 24.31          & 70          & 106         \\
+        MSET                     & 13.84          & 10.22          & 17.37          & 96          & \textbf{66} \\
+        Vanilla AE               & 11.41          & 6.53           & 13.91          & 103         & 106         \\
+        Vanilla LSTM             & 11.31          & -3.80          & 17.25          & 90          & 342         \\
         \midrule
         % Always positive              & 0              & 0              & 0              & 0           & 1           \\
-        Null detector                & 0              & 0              & 0              & 127         & 0           \\
+        Null detector            & 0              & 0              & 0              & 127         & 0           \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -162,36 +161,35 @@ The results of experiments, presented in Table~\ref{table:cats_cpd_comparison}, 
 In the given settings, our proposed method balances well between false positives and false negatives, with the lowest number of missed change points. The results indicate that the proposed method is capable of detecting change points in the complex dynamical system and can employ information about control inputs.
 
 \begin{table}[H]
-    \caption{Comparison of different algorithms based on NAB metrics.}\label{table:cats_cpd_comparison}
+    \caption{Comparison of different algorithms based on NAB metrics. Best scores are highlighted.}\label{table:cats_cpd_comparison}
     \centering
     \begin{tabular}{l *3{S[table-format=3.2]} *2{S[table-format=3.0]}}
         \toprule
-        \textbf{Algorithm}           &
-        \multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                                           \\ (standard)} &
-        \multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                                           \\ (low FP)} &
-        \multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                                           \\ (low FN)} &
-        \textbf{FNs}                 &
+        \textbf{Algorithm}         &
+        \multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                                         \\ (standard)} &
+        \multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                                         \\ (low FP)} &
+        \multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                                         \\ (low FN)} &
+        \textbf{FNs}               &
         \textbf{FPs}
         \\
         \midrule
-        Perfect detector             & 30.21          & 29.89          & 31.28          & 265          & 0          \\
+        Perfect detector           & 30.21          & 29.89          & 31.28          & 265          & 0          \\
         \midrule
-        MSCRED                       & \textbf{37.19} & 13.46          & \textbf{47.18} & \textbf{130} & 1659       \\
-        \textbf{CPD-DMD (alt.)}      & \textbf{22.51} & 18.13          & \textbf{25.65} & \textbf{271} & 277        \\
-        \textbf{CPD-DMD (t=0)}       & 22.46          & \textbf{18.15} & 25.61          & \textbf{271} & 271        \\
-        \textbf{CPD-DMD (alt., t=0)} & 22.46          & \textbf{18.15} & 25.61          & \textbf{271} & 271        \\
-        \textbf{CPD-DMD}             & 13.40          & 11.69          & 15.05          & 325          & 98         \\
-        Isolation forest (c=3.8\%)   & 17.81          & 15.84          & 20.00          & 301          & 106        \\
-        T-squared+Q (PCA)            & 11.80          & 11.40          & 12.30          & 345          & 20         \\
-        LSTM-AE                      & 11.39          & 11.26          & 11.69          & 349          & \textbf{3} \\
-        T-squared                    & 15.15          & 14.98          & 15.71          & 331          & \textbf{0} \\
-        MSET                         & 14.48          & 13.43          & 15.60          & 327          & 58         \\
-        Vanilla AE                   & 2.52           & 2.44           & 2.77           & 385          & \textbf{0} \\
-        Vanilla LSTM                 & 0.73           & 0.70           & 0.82           & 394          & \textbf{0} \\
-        Conv-AE                      & 0.15           & 0.14           & 0.18           & 397          & \textbf{0} \\
+        MSCRED                     & \textbf{37.19} & 13.46          & \textbf{47.18} & \textbf{130} & 1659       \\
+        \textbf{CPD-DMD (t=0)}     & 25.66          & \textbf{20.62} & 29.84          & 246          & 305        \\
+        \textbf{CPD-DMD}           & 17.84          & 15.01          & 20.06          & 294          & 161        \\
+        Isolation forest (c=3.8\%) & 17.81          & 15.84          & 20.00          & 301          & 106        \\
+        T-squared+Q (PCA)          & 11.80          & 11.40          & 12.30          & 345          & 20         \\
+        LSTM-AE                    & 11.39          & 11.26          & 11.69          & 349          & 3          \\
+        T-squared                  & 15.15          & 14.98          & 15.71          & 331          & \textbf{0} \\
+        MSET                       & 14.48          & 13.43          & 15.60          & 327          & 58         \\
+        \textbf{CPD-DMD (t=0.5)}   & 7.24           & 6.55           & 8.43           & 355          & 27         \\
+        Vanilla AE                 & 2.52           & 2.44           & 2.77           & 385          & \textbf{0} \\
+        Vanilla LSTM               & 0.73           & 0.70           & 0.82           & 394          & \textbf{0} \\
+        Conv-AE                    & 0.15           & 0.14           & 0.18           & 397          & \textbf{0} \\
         \midrule
         % Always positive              & 0              & 0              & 0              & 0            & 1          \\
-        Null detector                & 0              & 0              & 0              & 398          & 0          \\
+        Null detector              & 0              & 0              & 0              & 398          & 0          \\
         \bottomrule
     \end{tabular}
 \end{table}
