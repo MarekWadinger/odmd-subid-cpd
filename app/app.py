@@ -104,7 +104,7 @@ def plot(X, scores_dmd, scores_dmd_diff, Y_, test_size):
     fig, axs = plot_chd(
         [X.values, scores_dmd.real, scores_dmd_diff.real],
         Y_,
-        labels=["X", "DMD", "DMD_diff"],
+        labels=["X", "DMD", "DMD (diff)"],
         grace_period=test_size,
     )
     fig.set_size_inches(18, 10)  # Set the size of the figure
@@ -114,7 +114,7 @@ def plot(X, scores_dmd, scores_dmd_diff, Y_, test_size):
 @st.cache_data
 def compute_metrics(Y, scores_dmd, test_size):
     start_date = "2023-01-01 00:00:00"
-    date_range = pd.date_range(start=start_date, periods=len(Y), freq="S")
+    date_range = pd.date_range(start=start_date, periods=len(Y), freq="s")
     y_true = pd.Series(Y, index=date_range)
     y_true_cp = y_true.diff().abs().fillna(0.0)
     experiments: dict[str, pd.Series] = {

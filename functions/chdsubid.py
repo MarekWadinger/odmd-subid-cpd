@@ -8,10 +8,21 @@ from river.anomaly.base import AnomalyDetector
 from river.base import MiniBatchTransformer, Transformer
 from river.decomposition import OnlineDMD, OnlineDMDwC
 
+from .preprocessing import hankel
 from .rolling import Rolling
 
 
 # # Default parameters
+def get_default_timedelays(h: int, n_features_max: int) -> tuple[int, int]:
+    if h < n_features_max:
+        h_ = h
+        step = 1
+    else:
+        h_ = n_features_max
+        step = (h) // n_features_max
+    return h_, step
+
+
 def get_default_rank(X):
     """Get default rank for the given data matrix
 
@@ -31,7 +42,7 @@ def get_default_rank(X):
     return r
 
 
-def get_default_params(X, window_size: int, max_rank=10):
+def get_default_params(X, U=None, window_size: int = 0, max_rank=10):
     """Get default parameters for the given dataset and window size
     Args:
         X (np.ndarray): Data matrix
@@ -40,17 +51,29 @@ def get_default_params(X, window_size: int, max_rank=10):
     References:
         [2] Moskvina, V., & Zhigljavsky, A. (2003). An Algorithm Based on Singular Spectrum Analysis for Change-Point Detection. Communications in Statistics - Simulation and Computation, 32(2), 319-352. doi:[10.1081/SAC-120017494](https://doi.org/10.1081/SAC-120017494).
     """
+    if window_size == 0:
+        window_size = len(X)
     # If window_size is not very large, then take half
     hn = window_size // 2
+    hn, step = get_default_timedelays(hn, 100)
     # Base size
     ref_size = window_size
+    lag = 0
     test_size = window_size
     # Optimal low-rank representation of signal with unknown noise variance
     if hn * X.shape[1] < 100:
-        r = min(get_default_rank(X), max_rank)
+        q = min(get_default_rank(hankel(X, hn, step)), max_rank)
     else:
-        r = max_rank
-    return hn, ref_size, test_size, r
+        q = max_rank
+    if U is not None:
+        if hn * U.shape[1] < 100:
+            p = min(get_default_rank(hankel(U, hn, step)), max_rank)
+        else:
+            p = max_rank
+
+        return window_size, ref_size, test_size, lag, q, p
+
+    return window_size, ref_size, test_size, lag, q
 
 
 class SubIDChangeDetector(AnomalyDetector):
