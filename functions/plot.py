@@ -19,9 +19,9 @@ plt.rcParams.update(
         "xtick.labelsize": 12,
         "ytick.labelsize": 12,
         "figure.subplot.left": 0.1,
-        "figure.subplot.bottom": 0.2,
+        "figure.subplot.bottom": 0.05,
         "figure.subplot.right": 0.95,
-        "figure.subplot.top": 0.85,
+        "figure.subplot.top": 0.95,
         # "backend": "macOsX"
     }
 )
@@ -36,7 +36,7 @@ formatter = mdates.ConciseDateFormatter(
 
 def set_size(
     width: float | int | Literal["article", "thesis", "beamer"] = 307.28987,
-    fraction=1,
+    fraction=1.0,
     subplots=(1, 1),
 ):
     """Set figure dimensions to avoid scaling in LaTeX.
@@ -46,7 +46,7 @@ def set_size(
     width: float or string
             Document width in points, or string of predined document type
     fraction: float, optional
-            Fraction of the width which you wish the figure to occupy
+            Fraction of the height which you wish the figure to occupy
     subplots: array-like, optional
             The number of rows and columns of subplots.
     Returns
@@ -64,7 +64,7 @@ def set_size(
         width_pt = width
 
     # Width of figure (in pts)
-    fig_width_pt = width_pt * fraction
+    fig_width_pt = width_pt
     # Convert from pt to inches
     inches_per_pt = 1 / 72.27
 
@@ -75,9 +75,11 @@ def set_size(
     # Figure width in inches
     fig_width_in = fig_width_pt * inches_per_pt
     # Figure height in inches
-    fig_height_in = fig_width_in * golden_ratio * (subplots[0] / subplots[1])
+    fig_height_in = (
+        fig_width_in * golden_ratio * ((subplots[0] * fraction) / subplots[1])
+    )
 
-    return (fig_width_in, fig_height_in)
+    return (fig_width_in * 1.2, fig_height_in * 1.2)
 
 
 RED_ALPHA05 = "#ea9293"
@@ -85,7 +87,7 @@ GRAY_ALPHA025 = "#dedede"
 
 
 def plot_chd(
-    datas: list[np.ndarray],
+    datas: dict[str, np.ndarray | None] | list[np.ndarray | None],
     y_true: list[float] | np.ndarray | None = None,
     labels: list[str] | None = None,
     idx_start: int | None = None,
@@ -94,6 +96,8 @@ def plot_chd(
     ids_in_end: list[int] | None = None,
     grace_period: int | None = None,
     normalize: bool = False,
+    axs: np.ndarray | None = None,
+    **fig_kwargs: dict,
 ):
     """Plot hange-Point Detection Results.
 
@@ -109,45 +113,58 @@ def plot_chd(
         normalize: Normalize data. If False, no normalization is done.
 
     """
-    fig, axs = plt.subplots(
-        len(datas),
-        1,
-        sharex=True,
-        figsize=set_size(width="article", subplots=(len(datas), 1)),
-    )
+    fig_kwargs_ = {
+        "width": "article",
+        "subplots": (len(datas), 1),
+        "fraction": 0.5,
+    }
+    fig_kwargs_.update(fig_kwargs)
+    if axs is None:
+        fig, axs_ = plt.subplots(
+            len(datas),
+            1,
+            sharex="col",
+            sharey="row",
+            figsize=set_size(**fig_kwargs_),
+        )
+    else:
+        axs_ = axs
+        fig = axs[0].figure
 
     idx_start = 0 if idx_start is None else idx_start
-    idx_end = len(datas[0]) if idx_end is None else idx_end
-    x = range(idx_start, idx_end)
+    # idx_end = len(datas[0]) if idx_end is None else idx_end
 
     if labels is None:
         labels = [""] * len(datas)
 
-    for ax, data, label in zip(axs, datas, labels):
-        if isinstance(ax, Axes):
-            if y_true is not None:
-                for i in y_true:
-                    ax.axvline(i, color=RED_ALPHA05)
-                    if grace_period:
-                        ax.axvline(
-                            i + grace_period, color=RED_ALPHA05, linestyle="--"
-                        )
-                        # ax.add_patch(patches.Rectangle(
-                        #         (i, 0),
-                        #         grace_period,
-                        #         data.max(),
-                        #         linewidth=0,
-                        #         facecolor=RED_ALPHA05,
-                        #         linestyle="--",
-                        #     ))
-            ax.plot(x, data[idx_start:idx_end], label=label)
+    for ax, data, label in zip(axs_, datas, labels):
+        if isinstance(data, str) and isinstance(datas, dict):
+            name = data
+            data = datas[data]
+        else:
+            name = ""
+        if not isinstance(ax, Axes):
+            return fig, axs_
+
+        if y_true is not None:
+            for i in y_true:
+                ax.axvline(i, color=RED_ALPHA05)
+                if grace_period:
+                    ax.axvline(
+                        i + grace_period, color=RED_ALPHA05, linestyle="--"
+                    )
+        if data is not None:
+            ax.plot(data[idx_start:idx_end], label=label)
             if normalize:
                 ax_norm = ax.twinx()
                 ax_norm.plot(  # type: ignore
                     _normalize(data[idx_start:idx_end]),
                     label=label + " (norm)",
                 )
-            ax.legend()
+            if name != "":
+                ax.set_ylabel(name)
+            if label != "":
+                ax.legend()
             ax.grid(True, axis="y")
 
             if ids_in_start is not None and ids_in_end is not None:
@@ -186,4 +203,4 @@ def plot_chd(
                     )  # Set the background transparency
                     ax.indicate_inset_zoom(inlay_ax, edgecolor="black")
 
-    return fig, axs
+    return fig, axs_
