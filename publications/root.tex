@@ -22,6 +22,8 @@ soft open fences, separator symbol=;,
 \usepackage{longtable}
 %% The SI units alignment
 \usepackage{siunitx}
+%% ODE handling
+\usepackage[ISO]{diffcoeff}
 
 %% The lineno packages adds line numbers. Start line numbering with
 %% \begin{linenumbers}, end it with \end{linenumbers}. Or switch it on
@@ -83,11 +85,11 @@ soft open fences, separator symbol=;,
 
 	%%Research highlights
 	\begin{highlights}
-		\item Trunced online extended DMD with control (TOE-DMDc) is proposed.
-		\item Improved change-point detection is reached using TOE-DMDc.
-		\item Adaptation and robustness is achieved using self-supervised.
+		\item Trunced online extended DMD with control is proposed.
+		\item Improved change-point detection is reached using ODMD-CPD.
+		\item Adaptation and robustness are achieved using online self-supervised learning.
 		\item Intuitive and streamlined hyperparameter selection based on history replay.
-		\item Application to non-linear time-varying controlled systems with delay.
+		\item Applicable to non-linear time-varying controlled systems with input delays.
 	\end{highlights}
 
 

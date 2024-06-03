@@ -175,7 +175,18 @@ The complete change-point detection algorithm comprises three fundamental steps,
 \end{algorithm}
 
 \subsection{Guidelines}\label{sec:guidelines}
-This subsection aims to provide comprehensive guidelines for selecting hyperparameters tailored to specific use cases and problem types. Such guidance is essential for ensuring the tool's versatility across a broad spectrum of industrial applications characterized by unique conditions and specifications. By offering insights into the selection of hyperparameters, our guidelines aid the customization of the method to meet the specific requirements of different applications.
+This subsection aims to provide comprehensive guidelines for selecting hyperparameters tailored to specific use cases and problem types. Such guidance is essential for ensuring the tool's versatility across a broad spectrum of industrial applications characterized by unique conditions and specifications. By offering insights into the selection of hyperparameters, our guidelines aid the customization of the method to meet the specific requirements of different applications. To further demonstrate the impact of hyperparameter selection, we have included visual guidelines in Figure~\ref{fig:hyperparameters-all}, where all windowing parameters are changed at once, and Figure~\ref{fig:hyperparameters}, where the influence of base size, test size, and time-delays selection is shown.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figures/parameters-influence-allatonce.pdf}
+    \caption{Increasing value of all the hyperparameters at once increases robustness to noise and delays peak of CPD statistics.}\label{fig:hyperparameters-all}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figures/Unit step-parameters-influence-ref_size_test_size_hn.pdf}
+    \caption{Influence of changing hyperparameter (denoted in title of each column) values on CPD in synthetic unit step dataset.~Increasing value of base size stabilizes the score without significantly delaying the peak of CPD.~Increasing test size and number of time-delays in embedding increases robustness to noise more prominently while delying the peak of CPD.}\label{fig:hyperparameters}
+\end{figure}
 
 \subsubsection{Optimal rank}
 Determining the approximate rank \( r \) of the low-rank representation of the system is a crucial and inherently subjective step in any dimensionality reduction technique. To address this challenge, we recommend employing the systematic hard-thresholding algorithm proposed by Gavish and Donoho (2014) for extracting \( r \) from noisy data. This algorithm requires information about the ratio of the number of states \((m + l) * h\) in the learning set \(\ui{\bar{X}}{L}\) and the learning window size \(a\), the selection of which is discussed later in Subsection~\ref{sec:base-window}.
@@ -195,10 +206,4 @@ The test window size \(c\) determines the smoothness of change-point statistics 
 The number of time delays (\(h\)) is a critical parameter for ODMD-CPD in applications to non-linear systems with delayed effect of control action. Its selection relies on assumptions regarding the representativeness of snapshots with respect to the generating mechanism and the maximum expected delay of the control effect on system states. In the absence of such knowledge and with a reasonably large \(a\), \citet{Moskvina2003} recommend setting \(h = a / 2\) for the rank of the Hankel matrix. For larger \(a\), delay steps \(h_d\) may be used to capture the broadband dynamics of the system more effectively. The choice of \(h_d\) should be based on the maximum allowed number of features \((m + l)\frac{h}{h_d}\).
 
 \subsubsection{Change-detection statistics threshold}
-% TODO: there is a change that bellow 0.25 is only noise
-The threshold on change-detection statistics directly impacts the number of false positive or false negative alarms. Its proper selection further determines the delay of the detection alarm, as the rising change-point detection statistics cross the threshold sooner. We propose the following ranges based on different goals:
-\begin{itemize}
-    \item achieving higher recall (lower false negative (FN) rate) --- \( \interval[open right]{0.0}{0.25} \)
-    \item achieving higher precision (lower false positive (FP) rate) --- \( \interval[open left]{0.25}{0.5} \)
-    \item achieving higher F1 score (tradeoff between lower FN and FP) --- 0.25
-\end{itemize}
+The threshold on change-detection statistics directly impacts the number of false positive or false negative alarms. Its proper selection further determines the delay of the detection alarm, as the rising change-point detection statistics cross the lower threshold sooner. As the CPD statistic, defined in Subsection~\ref{detect-cpd}, has no proper normalization and is influenced by the selection of other hyperparameters, the specification of constant values is challenging. As a general rule of thumb, higher recall (lower false negative rate) is achieved by setting the threshold lower. In contrast, higher precision (lower false positive rate) is achieved by setting the threshold higher. If accurate system tracking is achieved, i.e., \( r \) and \(h\) were selected so that the signal is extracted from noise well, the threshold could be set to zero while not compromising precision significantly. This may be desired in safety critical systems where higher recall helps to protect assets and life.  Generally, the threshold should be set based on the desired trade-off between precision and recall, the change point's expected duration, and the structural changes' nature.

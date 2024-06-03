@@ -63,6 +63,30 @@ Both methods identify the transitions present in the dataset with high discrimin
     \caption{NPRS434: Sleep stage transition detection based on respiration data (1). Change score is evaluated for: proposed method as presented in Section~\ref{sec:method} (2), proposed method evaluating score as the difference of errors (3), and reference method using online SVD (4).}\label{fig:nprs44}
 \end{figure}
 
+\subsection{Simulated Two Tanks System with Input Delay}
+To demonstrate the applicability of the proposed method to non-linear controlled systems with time delays, we demonstrate its performance on a simulated two-tank system with input delay represented by a system of ODE
+
+\begin{equation}\label{eq:two_tanks_system}
+    \begin{aligned}
+        \diff{h_1(t)}{t} & = q(t-\tau) - \frac{k_1}{F_1}\sqrt{h_1(t)}                     \\
+        \diff{h_2(t)}{t} & = \frac{k_1}{F_2}\sqrt{h_1(t)} - \frac{k_2}{F_2}\sqrt{h_2(t)},
+    \end{aligned}
+\end{equation}
+
+where \(h_1(t)\) and \(h_2(t)\) are the levels in the tanks, \(q(t)\) is the control action, \(\tau \) is the time delay, \(k_1\) and \(k_2\) are the valve constants, and \(F_1\) and \(F_2\) are the cross-sectional areas of the tanks.
+
+The system in Eq.~\ref{eq:two_tanks_system} is simulated with a sampling frequency of 0.1 Hz and 12,000 snapshots. After every 200 snapshots, a step change is introduced through the action of a valve selected randomly from the interval \(\interval[open left]{0.0}{0.03} m^3s^{-1}\). The time delay of the system's response to control is between 20 to 30 snapshots. The states of the system are subject to external stimuli and Gaussian noise with a variance of \(0.35\). After 4000 snapshots, the artificial sensor bias causes unit step change in the observation of tank levels for subsequent 1000 snapshots. Between 7600 and 8600, the system's response to control action is doubled, which may be caused by an offset in the control valve. Lastly, a linear trend is added to the system states between 9800 and 12000 snapshots to stimulate the increasing offset in the control.
+
+The hyperparameters are selected based on the knowledge of the system dynamics. The learning window \(d\) is set to 2000 snapshots to capture the system's response to multiple control actions and different set points. The number of time delays in an embedding of states \(h\) is set to 200 snapshots to capture the system's dynamics, and \(\ui{h}{d}\) is set to 30 to increase performance while not significantly compromising representativeness of the dynamics. The time delays in a control action embedding are set to 30 to capture the control action responsible for the current system's response. As part of the on-the-flight preprocessing, we introduce a polynomial of degree 2 to the states to capture the non-linear dynamics of the system.~\(q\) and \(p\) are set to 2 and 1, respectively, to mitigate the impact of noise and capture information about the system's dynamics which time-delayed or polynomial embeddings might reveal.
+
+The results of the detection experiment on the simulated data, presented in Figure~\ref{fig: non-linear}, show that the proposed method accurately detects the starts of change points in the system's operation. The peak of change-point statistics is delayed by \(c\) snapshots, which is expected due to the nature of CPD-DMD. The proposed method detects all the change points in the system's operation, including the artificial sensor bias, the doubled response to control action, and the linear trend in the system states. While the SVD-based method detects all the change points as well, noisy, CPD statistics hinder the recognition of another change point regarding linear trends, which may be observed more often in real scenarios due to the aging of the device and seasonal effects.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figures/nonlin-chd_p2_q1-l2000_b200_t200roll_2000-dmd_w1.0-hx15-hl30-polyext.pdf}
+    \caption{CPD detection on two tanks system with input delay shows lower noise of DMD-CPD score aiding recognition of the slow drift from snapshot 9800.}\label{fig:nonlinear}
+\end{figure}
+
 \subsection{BESS --- Faulty HVAC Operation Detection}
 This case study demonstrates detection performance on a real-world dataset of faulty HVAC operation in an industrial-scale battery energy storage system (BESS). The studied BESS has an installed capacity of 151 kWh distributed among ten modules with 20 Li-ion NMC cells. A hardware fault occurred on one of the module's cooling fans on 23rd August 2023 at 17:12:30. To protect the profitability of the BESS for the end user, the faulty BESS was operated securely until the fault was fixed. This case study aims to detect the transition from normal to faulty operation of the HVAC system based on temperature profile monitoring. The dataset is provided by the BESS operator and normalized to protect sensitive business information. It captures snapshots of six spatially distributed temperature sensors of the targeted BESS module operation at approximately 30-second intervals.
 
@@ -70,14 +94,15 @@ The selection of hyperparameters demonstrates the intuitiveness of parameter sel
 
 The results of the detection experiment on simulated data streaming from the BESS history replay, presented in Figure~\ref{fig:bess}, show that before the actual occurrence of the fault, the system detects multiple events of abnormal operation with a source other than the identified dynamical system from the data. The proposed method accurately detects the transition from normal to faulty operation of the HVAC system with high accuracy and low false positive rate, with the peak of change-point statistics delayed by \(c\) snapshots.
 
-The proposed method detected three periods related to the transient normal behavior of the HVAC system, marked as change points. The alternative error evaluation method shows that we can detect both the transition from normal to faulty operation and vice versa. Due to the precise discrimination of faulty operation from normal, operators may regard initial peaks in change-point statistics as possible indicators of an approaching fault. This could be valuable for early detection and prevention of catastrophic consequences and maintenance planning. The positions of the potential fault precursors match the detected anomalies in~\citet{Wadinger2024}. This is particularly interesting from the perspective of cross-validating the methods and giving more credibility to regard these events as precursors of something more serious.
+The proposed method detected three periods related to the transient normal behavior of the HVAC system, marked as change points. While it is challenging to confirm if the initial peaks in the CPD score were false positives, operators can interpret this information as a potential early warning of an impending fault. Such early warnings are valuable for detecting faults, preventing catastrophic consequences, and planning maintenance. The positions of the potential fault precursors match the detected anomalies in~\citet{Wadinger2024} where detection was performed using online anomaly detection method based on conditional probability distribution. This alignment supports cross-validation of both methods and lends credibility to identifying these events as fault precursors.
+
+The evaluation of error difference shows that we can detect both the transition from normal to faulty operation and vice versa. Here the peaks related to true anticipated CPs are more pronounced than in the error ratio evaluation. This indicates usefulness of the error difference evaluation to increase the precision of the CPD.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{figures/bess-chd_p10-l2880_b240_t240roll_2880-dmd_w1.0-hx20.pdf}
     \caption{Faulty operation of HVAC in BESS results in increased operation temperature.}\label{fig:bess}
 \end{figure}
-
 
 \subsection{Laboratory Water Circulation System (SKAB)}
 In this section, we compare the performance of the proposed method with commonly used change-point detection methods on a benchmark real-world dataset of a laboratory water circulation system (SKAB)~\citep{Katser2020}. The dataset represents a well-described industrial system with multiple sensors and well-defined operational and fault states characterized by collective anomalies or change points, as well as transitions between these states.
