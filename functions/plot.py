@@ -166,6 +166,7 @@ def plot_chd(
             if label != "":
                 ax.legend()
             ax.grid(True, axis="y")
+            ax.ticklabel_format(style="sci", axis="y", scilimits=(2, 1))
 
             if ids_in_start is not None and ids_in_end is not None:
                 n_ins = len(ids_in_start)
@@ -202,5 +203,7 @@ def plot_chd(
                         0.75
                     )  # Set the background transparency
                     ax.indicate_inset_zoom(inlay_ax, edgecolor="black")
+
+    fig.align_ylabels(axs_)
 
     return fig, axs_
