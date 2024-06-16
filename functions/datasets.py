@@ -53,8 +53,9 @@ def load_nprs44() -> np.ndarray:
     )
 
 
-def load_cats(resample_s: None | int = None) -> pd.DataFrame:
-    file_path: str = "data/cats/data.csv"
+def load_cats(
+    file_path: str = "data/cats/data.csv", resample_s: None | int = None
+) -> pd.DataFrame:
     url = "https://zenodo.org/records/7646897/files/data.parquet"
 
     if os.path.exists(file_path):
