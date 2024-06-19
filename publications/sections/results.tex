@@ -26,14 +26,14 @@ Our proposed method is compared to the online SVD-based CPD presented in \citet{
 	\end{tabular}
 \end{table}
 
-The results in Figure~\ref{fig:artificial_steps_detection}, show that while no method identified the first change-point at snapshot 1000, DMD-CPD discriminates minor change-points around the first operation point, with decreasing change-point statistics for subsequent detections. This decrease can be explained by the significant increase in absolute error between the original and reconstructed data for both the base and test sets, compared to their relative error, which decreases the residual of their division. Computing the difference between test and base set reconstruction errors gives evidence to the previous explanation. This relation of energy of the change-point detection to the actual dissimilarity of the data is a significant advantage of the proposed method over the deep learning techniques~\citep{DeRyck2021}. To sum up, the absolute dissimilarity of the data is reflected in the difference in the errors, while the relative dissimilarity is reflected in the error ratio.
+The results in Figure~\ref{fig:artificial_steps_detection} show that while no method identified the first change-point at snapshot 1000, DMD-CPD discriminates minor change-points around the first operation point, with decreasing change-point statistics for subsequent detections. This decrease can be explained by the significant increase in absolute error between the original and reconstructed data for both the base and test sets, compared to their relative error, which decreases the residual of their division. Computing the difference between test and base set reconstruction errors gives evidence to the previous explanation. This relation of energy of the change-point detection to the actual dissimilarity of the data is a significant advantage of the proposed method over the deep learning techniques~\citep{DeRyck2021}. To sum up, the absolute dissimilarity of the data is reflected in the difference in the errors, while the relative dissimilarity is reflected in the error ratio.
 
 The proposed method has a similar shape of statistics for error divergence to the error ratio statistics of the method proposed in \citet{Kawahara2007} but with significantly lower noise. In both cases, the peak of the change-point statistics is delayed by \(c\) snapshots, which is expected due to the nature of CPD-DMD.~The exact delay allows for precisely pinpointing the change-point time.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth]{figures/y0-chd_r2_100_100-roll_301-dmd_w1.0-h80.pdf}
-	\caption{Artificial steps detection.}\label{fig:artificial_steps_detection}
+	\caption{Steps detection in artificial data (1). Change score is evaluated for the proposed method as presented in Section~\ref{sec:method} (2), the proposed method evaluating score as the difference of errors (3), and the reference method using online SVD (4). Our method is capable of detecting minor CPs that are missed by the reference method.}\label{fig:artificial_steps_detection}
 \end{figure}
 
 \subsection{Sleep Stage Detection via Respiration Signal}
@@ -42,12 +42,12 @@ Identifying change points in real-world data is challenging due to cyclic, seaso
 \paragraph{NPRS43}
 The comparison results of experiments conducted on the NPRS43 dataset are presented in Figure~\ref{fig:nprs43}. This dataset spans approximately 7 minutes of sleep respiration signals of a subject. The subject is in stage II deep sleep for the first 5 minutes, then transitions through a short awake stage of approximately 1 minute to the stage I sleep. The transitions are marked as red vertical lines in the plot. Due to the size of the test set, the peak of change-point statistics is delayed by \(c\) snapshots and marked as red dashed vertical lines.
 
-Both methods identify the first transition from stage II to the awake state with a peak of statistics delayed by \(c\). While SVD fails to recognize the second transition, our method displays an increased score with significant delay after the transition. Since the delay is longer than \(a + c\), it could be regarded as a false positive (FP) detection of a change point. Nonetheless, by visually examining data after the ground truth label, it could be argued that the second transition occurs in a more gradual manner and spans multiple breathing cycles, two with very short thrax extensions after the ground truth label, followed by two with larger thrax extensions and ended by two very large extensions. Our method seems to capture the middle point of this gradual transition as a reference, and learning windows cross the first transition point. The validity of this reasoning was not supported by the
+Both methods identify the first transition from stage II to the awake state with a peak of statistics delayed by \(c\). While SVD fails to recognize the second transition, our method displays an increased score with significant delay after the transition. Since the delay is longer than \(a + c\), it could be regarded as a false positive (FP) detection of a change point. Nonetheless, by visually examining data after the ground truth label, it could be argued that the second transition occurs more gradually and spans multiple breathing cycles, two with very short thrax extensions after the ground truth label, followed by two with larger thrax extensions and ended by two very large extensions. Our method seems to capture the middle point of this gradual transition as a reference, and learning windows cross the first transition point. The validity of this reasoning was not supported by the
 
 \begin{figure}
 	\centering
 	\includegraphics[width=\linewidth]{figures/nprs43-chd_r2-roll_301-dmd_w1.0-h80.pdf}
-	\caption{NPRS43: Sleep stage transition detection based on respiration data (1). Change score is evaluated for: proposed method as presented in Section~\ref{sec:method} (2), proposed method evaluating score as the difference of errors (3), and reference method using online SVD (4).}\label{fig:nprs43}
+	\caption{NPRS43: Sleep stage transition detection based on respiration data (1). Change score is evaluated for the proposed method as presented in Section~\ref{sec:method} (2), the proposed method evaluating score as the difference of errors (3), and the reference method using online SVD (4). While both methods detect the first CP, our method detects the second CP as well, albeit with a longer delay due to the proximity of the CPs.}\label{fig:nprs43}
 \end{figure}
 
 \paragraph{NPRS44}
@@ -58,7 +58,7 @@ Both methods identify the transitions present in the dataset with high discrimin
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth]{figures/nprs44-chd_r2-roll_301-dmd_w1.0-h80.pdf}
-	\caption{NPRS434: Sleep stage transition detection based on respiration data (1). Change score is evaluated for: proposed method as presented in Section~\ref{sec:method} (2), proposed method evaluating score as the difference of errors (3), and reference method using online SVD (4).}\label{fig:nprs44}
+	\caption{NPRS434: Sleep stage transition detection based on respiration data (1). Change score is evaluated for the proposed method as presented in Section~\ref{sec:method} (2), the proposed method evaluating score as the difference of errors (3), and the reference method using online SVD (4). While both methods detect CPs, our method detects the first one with a score three times higher than the peaks unrelated to tracked events, while OSVD only doubles the score.}\label{fig:nprs44}
 \end{figure}
 
 \subsection{Simulated Two Tanks System with Input Delay}
@@ -77,12 +77,12 @@ The system in Eq.~\ref{eq:two_tanks_system} is simulated with a sampling frequen
 
 The hyperparameters are selected based on the knowledge of the system dynamics. The learning window \(d\) is set to 2000 snapshots to capture the system's response to multiple control actions and different set points. The number of time delays in an embedding of states \(h\) is set to 200 snapshots to capture the system's dynamics, and \(\ui{h}{d}\) is set to 30 to increase performance while not significantly compromising representativeness of the dynamics. The time delays in a control action embedding are set to 30 to capture the control action responsible for the current system's response. As part of the on-the-flight preprocessing, we introduce a polynomial of degree 2 to the states to capture the non-linear dynamics of the system.~\(q\) and \(p\) are set to 2 and 1, respectively, to mitigate the impact of noise and capture information about the system's dynamics which time-delayed or polynomial embeddings might reveal.
 
-The results of the detection experiment on the simulated data, presented in Figure~\ref{fig: non-linear}, show that the proposed method accurately detects the starts of change points in the system's operation. The peak of change-point statistics is delayed by \(c\) snapshots, which is expected due to the nature of CPD-DMD. The proposed method detects all the change points in the system's operation, including the artificial sensor bias, the doubled response to control action, and the linear trend in the system states. While the SVD-based method detects all the change points as well, noisy, CPD statistics may hinder the recognition of another change point regarding linear trends, which may be observed more often in real scenarios due to the aging of the device and seasonal effects.
+The results of the detection experiment on the simulated data, presented in Figure~\ref{fig: non-linear}, show that the proposed method accurately detects the starts of change points in the system's operation. The peak of change-point statistics is delayed by \(c\) snapshots, which is expected due to the nature of CPD-DMD. The proposed method detects all the change points in the system's operation, including the artificial sensor bias, the doubled response to control action, and the linear trend in the system states. While the SVD-based method detects all the change points as well, noisy CPD statistics may hinder the recognition of another change point regarding linear trends, which may be observed more often in real scenarios due to the aging of the device and seasonal effects.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth]{figures/nonlin-chd_p2_q1-l2000_b200_t200roll_2000-dmd_w1.0-hx15-hl30-polyext.pdf}
-	\caption{CPD detection on two tanks system with input delay shows lower noise of DMD-CPD score aiding recognition of the slow drift from snapshot 9800.}\label{fig:nonlinear}
+	\caption{CPD detection on data of two tanks system (1) with delayed input (2) shows lower noise of DMD-CPD score (3) aiding recognition of the slow drift from snapshot 9800 as compared to the reference method (4).}\label{fig: non-linear}
 \end{figure}
 
 \subsection{BESS --- Faulty HVAC Operation Detection}
@@ -99,7 +99,7 @@ The evaluation of error difference shows that we can detect both the transition 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth]{figures/bess-chd_p10-l2880_b240_t240roll_2880-dmd_w1.0-hx20.pdf}
-	\caption{Faulty operation of HVAC in BESS results in increased operation temperature.}\label{fig:bess}
+	\caption{Faulty operation of HVAC in BESS results in altered operation temperature (1). Our proposed method detects a transition towards a novel state and displays multiple peaks in the CPD score (2). Meanwhile, an alternative formulation of our proposed method increases the prominence of the CPD score peaks during the transition towards the novel state and assigns negative peaks in the CPD score to the transitions back towards the original state (3).}\label{fig:bess}
 \end{figure}
 
 \subsection{Laboratory Water Circulation System (SKAB)}
