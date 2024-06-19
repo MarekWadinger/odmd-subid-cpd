@@ -183,28 +183,28 @@ The results of experiments, presented in Table~\ref{table:cats_cpd_comparison}, 
 	\centering
 	\begin{tabular}{l *3{S[table-format=3.2]}}
 		\toprule
-		\textbf{Algorithm}             &
-		\multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                 \\ (standard)} &
-		\multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                 \\ (low FP)} &
-		\multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                 \\ (low FN)}
+		\textbf{Algorithm}              &
+		\multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                  \\ (standard)} &
+		\multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                  \\ (low FP)} &
+		\multicolumn{1}{p{1.7cm}}{\centering \textbf{NAB}                                  \\ (low FN)}
 		\\
 		\midrule
-		Perfect detector               & 30.21          & 29.89          & 31.28          \\
+		Perfect detector                & 30.21          & 29.89          & 31.28          \\
 		\midrule
-		MSCRED                         & \textbf{37.19} & 13.46          & \textbf{47.18} \\
-		\textbf{CPD-DMD (\(t=0\))}     & 25.66          & \textbf{20.62} & 29.84          \\
-		\textbf{CPD-DMD}               & 17.84          & 15.01          & 20.06          \\
-		Isolation forest (\(c=3.8\)\%) & 17.81          & 15.84          & 20.00          \\
-		T-squared+Q (PCA)              & 11.80          & 11.40          & 12.30          \\
-		LSTM-AE                        & 11.39          & 11.26          & 11.69          \\
-		T-squared                      & 15.15          & 14.98          & 15.71          \\
-		MSET                           & 14.48          & 13.43          & 15.60          \\
-		Vanilla AE                     & 2.52           & 2.44           & 2.77           \\
-		Vanilla LSTM                   & 0.73           & 0.70           & 0.82           \\
-		Conv-AE                        & 0.15           & 0.14           & 0.18           \\
+		MSCRED                          & \textbf{37.19} & 13.46          & \textbf{47.18} \\
+		\textbf{CPD-DMD (\(t=0\))}      & 25.66          & \textbf{20.62} & 29.84          \\
+		\textbf{CPD-DMD}                & 17.84          & 15.01          & 20.06          \\
+		Isolation forest (\(c=3.8\% \)) & 17.81          & 15.84          & 20.00          \\
+		T-squared+Q (PCA)               & 11.80          & 11.40          & 12.30          \\
+		LSTM-AE                         & 11.39          & 11.26          & 11.69          \\
+		T-squared                       & 15.15          & 14.98          & 15.71          \\
+		MSET                            & 14.48          & 13.43          & 15.60          \\
+		Vanilla AE                      & 2.52           & 2.44           & 2.77           \\
+		Vanilla LSTM                    & 0.73           & 0.70           & 0.82           \\
+		Conv-AE                         & 0.15           & 0.14           & 0.18           \\
 		\midrule
 		% Always positive                & 0.00           & 0.00           & 0.00           \\
-		Null detector                  & 0.00           & 0.00           & 0.00           \\
+		Null detector                   & 0.00           & 0.00           & 0.00           \\
 		\bottomrule
 	\end{tabular}
 \end{table}
