@@ -1,3 +1,4 @@
+import itertools
 from typing import Literal
 
 import numpy as np
@@ -149,3 +150,17 @@ def hankel(
             index=index_in_,
         )
     return hX
+
+
+def polynomial_extension(df, degree):
+    poly_features = pd.DataFrame()
+
+    # Iterate over the combinations of columns up to the specified degree
+    for d in range(1, degree + 1):
+        for combination in itertools.combinations_with_replacement(
+            df.columns, d
+        ):
+            col_name = "*".join(str(c) for c in combination)
+
+            poly_features[col_name] = df[list(combination)].prod(axis=1)
+    return poly_features
