@@ -1,0 +1,42 @@
+\documentclass{letter}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\today}
+
+\begin{document}
+
+\begin{letter}{Prof.~Patrick Siarry, PhD, Editor-in-Chief of Engineering Applications of Artificial Intelligence}
+
+    \opening{Dear Professor Patrick Siarry,}
+
+    Enclosed, you will find an electronic submission of a manuscript entitled ``Change-Point Detection in Industrial Data Streams based on Online Dynamic Mode Decomposition with Control.''.
+
+    We present a novel method, ODMD-CPD, for online change-point detection (CPD) in industrial data streams, leveraging the proposed truncation of online Dynamic Mode Decomposition (DMD) with control. This approach exploits DMD's capability to decompose time series into dominant frequency components of the identified system while incorporating control effects, enabling the detection system to adapt to changing behaviors due to external factors. The proposed method excels at detecting persistent changes in system behavior by tracking the linear system representation of complex non-linear time-varying systems with control.
+
+    Our research demonstrates the effectiveness of this method on real-world data streams and highlights its competitiveness and superiority in detection accuracy compared to existing general CPD methods. The application of this method is crucial in safety-critical industrial settings, where complex dynamical systems are subject to transient changes, data arrives at non-uniform rates, and real-time assessment of changes is vital for safeguarding profit and safety.
+
+    We state the following contributions and novelties:
+    \begin{enumerate}
+        \item We introduce truncation of online DMD with control, achieving improved robustness to noise.
+        \item We propose ODMD-CPD applicable to non-linear time-varying controlled systems with input delays.
+        \item We achieve adaptation and robustness to the bias of CPD using online self-supervised learning.
+        \item We suggest intuitive and streamlined hyperparameter selection based on history replay.
+    \end{enumerate}
+
+    We believe that the presented study is of both practical and theoretical interest and is within the scope of the journal. We would very much appreciate it if you would consider the manuscript for the review process in the ``Engineering Applications of Artificial Intelligence'' journal as a regular paper. To emphasize the fit of this manuscript within this journal, we emphasize several recent works that deal with online change-point detection using artificial intelligence:
+    \begin{enumerate}
+        \item Bao, X. et al. (2024) ``A self-supervised contrastive change point detection method for industrial time series'', Engineering Applications of Artificial Intelligence, 133, p. 108217. doi: 10.1016/j.engappai.2024.108217.
+        \item Liu, J. and Zuo, H. (2024) ``Failure prediction with statistical analysis of bearing using deep forest model and change point detection'', Engineering Applications of Artificial Intelligence, 133, p. 108504. doi: 10.1016/j.engappai.2024.108504.
+        \item Tan, K. et al. (2024) ``Change detection on multi-sensor imagery using mixed interleaved group convolutional network'', Engineering Applications of Artificial Intelligence, 133, p. 108446. doi: 10.1016/j.engappai.2024.108446.
+    \end{enumerate}
+
+    This work is original and has not been published elsewhere, nor is it currently under consideration for publication elsewhere. We have carefully read and followed the submission guidelines of ``Engineering Applications of Artificial Intelligence''.
+
+    Sincerely yours,
+
+    Marek Wadinger, Michal Kvasnica, Yoshinobu Kawahara
+
+\end{letter}
+\end{document}
