@@ -48,6 +48,7 @@ jobs:
       - name: Check with ruff
         uses: chartboost/ruff-action@main
         with:
+          version: 0.4.10
           args: --line-length=79
 
       - name: Lint with flake8
