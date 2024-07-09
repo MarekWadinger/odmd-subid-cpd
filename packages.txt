@@ -1,2 +1,2 @@
-cargo
+cargo=0.80.0
 rustc
