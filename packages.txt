@@ -1,1 +1,1 @@
-rustc
+-t bullseye-backports rustc
