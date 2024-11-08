@@ -123,7 +123,7 @@ The final closed-loop form of the updated DMD matrix is then
 where \((X^\prime_{k : k+c} - A_k X_{k+c})\) represents the prediction error. The DMD matrix is updated by adding a term proportional to this error, reflecting the data's covariance structure and variable importance through \(C_{k: k + c}\).
 
 \subsection{Windowed Online DMD}
-The DMD updates presented in the previous section enable calibration of the DMD modes in scenarios where snapshots become available over time. Increasing the number of observed snapshots increases the accuracy of identification. However, in time-varying systems, the previous snapshots may become invalid and reduce the validity of the found model. In such cases, it may be desirable to revert the DMD matrix to the state it would have been in if the old snapshots had never been included in the so-called windowed online DMD.
+The DMD updates presented in the previous section enable calibration of the DMD modes in scenarios where snapshots become available over time. Increasing the number of observed snapshots increases the accuracy of identification. However, in time-varying systems, the previous snapshots may become invalid and reduce the validity of the found model. In such cases, it may be desirable to revert the DMD matrix to the state it would have been in if the old snapshots had never been included in the so-called windowed online DMD\@.
 
 To make DMD matrix forget first snapshots seen \( \{X_{c}, X^\prime_{c}\} = {\{x(t_i), x(t_i^\prime )\}}^c_{i=0}\), we simply use the update formulae from~\eqref{eq:precision-matrix-update} and~\eqref{eq:online-dmd-update} providing negative value of their original weights \(-C_{c}\).
 
