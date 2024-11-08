@@ -79,3 +79,5 @@ repos:
     rev: V3.24
     hooks:
       - id: latexindent
+        args:
+          - --defaultIndent="    "

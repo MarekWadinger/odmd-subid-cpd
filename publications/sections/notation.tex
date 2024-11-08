@@ -1,0 +1,50 @@
+\begin{longtable}{p{2cm}l}
+	\toprule
+	\textbf{Symbol}                & \textbf{Description}                                    \\
+	\midrule
+	\endhead{}
+	\(^+\)                         & Moore-Penrose pseudoinverse                             \\
+	\(^\top \)                     & matrix transpose                                        \\
+	\(^{-1}\)                      & matrix inverse                                          \\
+	\(||.||_F\)                    & Frobenius norm                                          \\
+	\(\mathbf{0}_{r \times r}\)    & zeros matrix of shape \(r \times r\)                    \\
+	\(A\)                          & state matrix                                            \\
+	\(A_i\)                        & state matrix at \(i\)-th snapshot                       \\
+	\(\tilde{A}\)                  & state matrix projected on POD                           \\
+	\(\bar{A}_i\)                  & augmented state and control matrix at \(i\)-th snapshot \\
+	\(B\)                          & input matrix                                            \\
+	\(B_i\)                        & input matrix at \(i\)-th snapshot                       \\
+	\(c\)                          & number of new snapshots                                 \\
+	\(C\)                          & diagonal weights matrix of data matrix                  \\
+	\(E\)                          & error between \(X\) and its projection                  \\
+	\(E'\)                         & orthonormal basis of state projection error matrix      \\
+	\(\Gamma \)                    & covariance matrix of posterior distribution             \\
+	\(\textbf{I}_{r \times r}\)    & identity matrix of shape \(r \times r\)                 \\
+	\(k\)                          & snapshot index                                          \\
+	\(\ui{K}{E'E}\)                & orthogonal projection of error matrix                   \\
+	\(l\)                          & number of control inputs                                \\
+	\(\lambda \)                   & eigenvalue                                              \\
+	\(\Lambda \)                   & diagonal matrix of eigenvalues                          \\
+	\(m\)                          & number of states                                        \\
+	\(p\)                          & rank of the reduced-order state matrix                  \\
+	\(P_i\)                        & precision matrix at \(i\)-th snapshot                   \\
+	\(\Phi \)                      & DMD modes                                               \\
+	\(q\)                          & rank of the reduced-order control matrix                \\
+	\(Q_i\)                        & lag covariance matrix of \(X_i\) and \(X'_i\)           \\
+	\(r\)                          & number of modes                                         \\
+	\(\tilde{\Sigma} \)            & singular values                                         \\
+	\(t\)                          & alarm threshold on CPD statistics                       \\
+	\(\theta \)                    & input at \(i\)-th snapshot                              \\
+	\(\Theta \)                    & input matrix at \(i\)-th snapshot                       \\
+	\(\tilde{U}\)                  & left singular vectors                                   \\
+	\(\tilde{V}\)                  & right singular vectors                                  \\
+	\( W \)                        & eigenvectors                                            \\
+	\(x_i\)                        & state at \(i\)-th snapshot                              \\
+	\(X\)                          & matrix of states                                        \\
+	\(X_i\)                        & matrix of states at \(i\)-th snapshot                   \\
+	\(X'_i\)                       & matrix of states at \((i+1)\)-th snapshot               \\
+	\(\tilde{X}_i\)                & projected matrix of states at \(i\)-th snapshot         \\
+	\(\bar{X}_i\)                  & matrix of states and controls at \(i\)-th snapshot      \\
+	\(\ui{\tilde{\bar{X}}}{buff}\) & buffer of projected augmented matrices of states        \\
+	\bottomrule
+\end{longtable}

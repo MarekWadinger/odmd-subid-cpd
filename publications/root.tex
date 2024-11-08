@@ -1,0 +1,148 @@
+\documentclass[preprint,12pt,authoryear]{elsarticle}
+%% Check linewidth with \the\linewidth
+%% The amssymb package provides various useful mathematical symbols
+\usepackage{amssymb}
+%% The amsmath package provides various useful equation environments.
+\usepackage{amsmath}
+%% The interval package provides the \interval command
+\usepackage{interval}
+\intervalconfig{soft open fences, separator symbol=;,}
+%% The algorithms
+\usepackage{algorithm}
+\usepackage{algorithmic}
+%% The images
+\usepackage{graphicx}
+%% Verbatim with URL-sensitive line breaks
+\usepackage{url}
+%% The table improvements package
+\usepackage{booktabs}
+%% The package for handling long tables
+\usepackage{longtable}
+%% The SI units alignment
+\usepackage{siunitx}
+%% ODE handling
+\usepackage{diffcoeff}
+
+%% The lineno packages adds line numbers. Start line numbering with
+%% \begin{linenumbers}, end it with \end{linenumbers}. Or switch it on
+%% for the whole article with \linenumbers.
+\usepackage{lineno}
+
+% upright sub-index
+\newcommand{\ui}[2]{#1 _{\text{#2}}}
+% upright sub-index with variable
+\newcommand{\uis}[3]{#1 _{\text{#2}, #3}}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\journal{}
+
+\begin{document}
+
+\begin{frontmatter}
+
+	%% Title, authors and addresses
+
+	\title{Change-Point Detection in Industrial Data Streams based on Online Dynamic Mode Decomposition with Control}
+
+	\author[aff1,aff2]{Marek Wadinger\corref{cor1}}
+	\ead{marek.wadinger@stuba.sk}
+	\cortext[cor1]{\textit{URL:} \url{uiam.sk/~wadinger} (Marek Wadinger)}
+	% TODO: Center the tilde vertically
+
+	\author[aff1]{Michal Kvasnica}
+	\ead{michal.kvasnica@stuba.sk}
+
+	\author[aff2]{Yoshinobu Kawahara}
+	\ead{kawahara@ist.osaka-u.ac.jp}
+
+	\affiliation[aff1]{organization={Institute of Information Engineering, Automation and Mathematics, Slovak University of Technology in Bratislava},
+		addressline={Radlinskeho 9},
+		postcode={812 37},
+		state={Bratislava},
+		country={Slovakia}
+	}
+
+	\affiliation[aff2]{organization={Machine Learning \& Systems Laboratory, Osaka University},
+		addressline={1--5 Yamadaoka},
+		postcode={565--0871},
+		state={Suita, Osaka},
+		country={Japan}
+	}
+
+	%% Abstract
+	\begin{abstract}
+		\input{sections/abstract.tex}
+	\end{abstract}
+
+	%%Graphical abstract
+	% \begin{graphicalabstract}
+	% 	%\includegraphics[width=\linewidth]{figures/....pdf}
+	% \end{graphicalabstract}
+
+	%%Research highlights
+	\begin{highlights}
+		\item Truncation of online extended DMD with control is proposed.
+		\item Improved change-point detection is reached using ODMD-CPD\@.
+		\item Adaptation and robustness are achieved using online self-supervised learning.
+		\item Intuitive and streamlined hyperparameter selection based on history replay.
+		\item Applicable to non-linear time-varying controlled systems with input delays.
+	\end{highlights}
+
+
+	%% Keywords
+	\begin{keyword}
+		Change-point detection
+		\sep{Dynamic mode decomposition}
+		\sep{Control systems}
+		\sep{Online learning}
+		\sep{Data streams}
+	\end{keyword}
+
+\end{frontmatter}
+
+\linenumbers{}
+
+%% main text
+\section{Introduction}\label{sec:introduction}
+\input{sections/introduction.tex}
+
+\section{Preliminaries}\label{sec:preliminaries}
+\input{sections/preliminaries.tex}
+
+\clearpage
+\section{Method}\label{sec:method}
+\input{sections/method.tex}
+
+\clearpage
+\section{Results}\label{sec:results}
+\input{sections/results.tex}
+
+\section{Conclusions}\label{sec:conclusions}
+\input{sections/conclusions.tex}
+
+\section*{Notation}
+\input{sections/notation.tex}
+
+\section*{Additional information}
+Our code and data are openly accessible on GitHub at the following URL:~\url{https://github.com/MarekWadinger/odmd-subid-cpd}.
+
+\section*{CRediT authorship contribution statement}
+\textbf{Marek Wadinger:} Conceptualization; Data curation; Formal analysis; Funding acquisition; Investigation; Methodology; Resources; Software; Validation; Visualization; Writing --- original draft; and Writing --- review \& editing.~\textbf{Michal Kvasnica:} Funding acquisition; Resources; Supervision; Validation~\textbf{Yoshinobu Kawahara:} Conceptualization; Project administration; Resources; Supervision; Validation.
+
+\section*{Declaration of Competing Interest}
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+\section*{Declaration of generative AI and AI-assisted technologies in the writing process}
+During the preparation of this work the authors used Grammarly and GPT-3.5 in order to improve language and readability. After using this tool/service, the authors reviewed and edited the content as needed and take full responsibility for the content of the publication.
+
+\section*{Acknowledgements}
+The authors gratefully acknowledge the contribution of the Program to support young researchers under the project Adaptive and Robust Change Detection for Enhanced Reliability in Intelligent Systems. The authors gratefully acknowledge the contribution of the Scientific Grant Agency of the Slovak Republic under the grant 1/0490/23 and grant VEGA `1/0691/21'. This research is funded by the Horizon Europe under the grant no. 101079342 (Fostering Opportunities Towards Slovak Excellence in Advanced Control for Smart Industries).
+
+\bibliographystyle{elsarticle-harv}
+\bibliography{main}
+
+\end{document}
+
+\endinput

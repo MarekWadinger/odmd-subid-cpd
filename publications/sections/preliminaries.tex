@@ -1,0 +1,378 @@
+This section presents the theoretical background of the proposed method. We start with the definition of Dynamic Mode Decomposition (DMD) and its online and extended online versions. We then describe how to utilize the online Singular Value Decomposition (SVD) algorithm, which enables finding lower rank representation less expensively. Finally, we present the proposed method for truncating the DMD matrix to a lower rank online.
+
+\subsection{DMD}\label{sec:dmd}
+Dynamic Mode Decomposition (DMD), introduced in \citet{Schmid2010}, is a technique with broad application in data sequence analysis. The use cases span discriminating dominant signal and noise components from high-dimensional measurements, revealing coherent structures, and modeling dynamic behavior via system identification. The DMD was found to be closely related to Koopman theory by \citet{Rowley2009}, revealing perhaps the most interesting property of representing a non-linear system as a set of linear governing equations, which enabled its combination with nominal MPC and other techniques where optimization problem could be significantly simplified by finding linear representation of the system albeit increased dimensionality of the model. Various modifications of DMD further broadened its utilization and underpinned its essential place in system identification and control theory \citep{Schmid2022}.
+
+The DMD algorithm aims to find the optimal linear operator \(A\) that advances the snapshot matrix in time; mathematically, the optimal linear operator \(A\) is defined as
+\begin{equation}\label{eq:best-fit-operator}
+    A = \mathrm{argmin} ||X^\prime - AX||_F = X^\prime X^+,
+\end{equation}
+where matrices \(X \in \mathbb{C}^{m \times n}\) and \(X^\prime \in \mathbb{C}^{m \times n}\) represent \(n\) consecutive snapshot pairs \({\{x(t_i), x(t_i^\prime )\}}^n_{i=1}\), where \(t_i^\prime = t_i + \Delta t_i\) and \(X^+\) is Moore-Penrose pseudinverse of \(X\).
+
+\citet{Tu2013} proposed an exact algorithm for solving~\eqref{eq:best-fit-operator}, that does not rely on the assumption of uniform sampling, enabling its usage in industrial data streams. While enabling irregular sampling, time steps \(\Delta t_i\) must be sufficiently small to capture the highest frequency dynamics.
+
+\subsection{Algorithm for DMD}
+DMD utilizes the computationally efficient singular value decomposition (SVD) of \(X\) to provide a low-rank representation of high-dimensional systems.
+
+\begin{equation}\label{eq:svd}
+    X = \tilde{U} \tilde{\Sigma} \tilde{V}^\top,
+\end{equation}
+where \(\tilde{U} \in \mathbb{C}^{m \times r}\) are proper orthogonal decomposition (POD) modes, \(\tilde{\Sigma} \in \mathbb{C}^{r \times r}\) are the singular values, and \( \tilde{V} \in \mathbb{C}^{n \times r}\) are right orthogonal singular vectors. Rank \(r \leq m\) denotes either the full or the approximate rank of the data matrix \(X\).
+
+Employing~\eqref{eq:svd} we may rewrite~\eqref{eq:best-fit-operator} as
+\begin{equation*}
+    A = X^\prime \tilde{V} \tilde{\Sigma}^{-1} \tilde{U}^\top,
+\end{equation*}
+
+and project \(A\) onto the POD modes \(\tilde{U}\) to obtain low rank representation \(\tilde{A}\) as
+\begin{equation}\label{eq:projected-operator}
+    \tilde{A} = \tilde{U}^\top A \tilde{U} = \tilde{U}^\top X^\prime \tilde{V} \tilde{\Sigma}^{-1}.
+\end{equation}
+
+Unlike SVD, which focuses on spatial correlation and energy content, DMD incorporates temporal information via spectral decomposition of the matrix \(\tilde{A}\) as
+\begin{equation}\label{eq:dmd-modes}
+    \tilde{A} W = W \Lambda.
+\end{equation}
+
+where diagonal elements of \(\Lambda \), \({\{\lambda}_0, {\lambda}_1, \ldots, {\lambda}_r\} \), are the DMD eigenvalues, and columns of \(W\) are the DMD modes.
+
+Projection onto POD modes in~\eqref{eq:projected-operator} preserves the non-zero eigenvalues of the full matrix \(A\), removing the necessity of working with the high-dimensional \(A\) matrix in~\eqref{eq:dmd-modes}.
+
+DMD modes represent linear combinations of POD mode amplitudes with consistent linear behavior over time, offering insights into temporal evolution, thus combining the advantages of SVD for spatial dimensionality reduction and FFT for identifying temporal frequencies. Each DMD mode is linked to a specific eigenvalue \(\lambda = a + ib\), indicating growth or decay rate \(a\) and oscillation frequency \(b\).
+
+Therefore, DMD not only reduces dimensionality but also models the evolution of the modes in time, enabling its usage for prediction\citep{Brunton2022}. Indeed, the operator \(A\) then represents a linear time-invariant system
+
+\begin{equation*}
+    X^\prime = AX.
+\end{equation*}
+
+Lastly, to reconstruct the full-dimensional DMD modes \(\Phi \) from reduced DMD modes \(W\) we use time-shifted snapshot matrix \(X^\prime \) obtaining
+\begin{equation}\label{eq:full-dmd-modes}
+    \Phi = X^\prime \tilde{V} \tilde{\Sigma}^{-1} W.
+\end{equation}
+
+\citet{Tu2013} has shown correspondence between DMD modes and eigenvectors of the full matrix \(A\) as
+\begin{align*}
+    A\Phi
+     & = (X^\prime \tilde{V} \tilde{\Sigma}^{-1} \tilde{U}*) (X^\prime \tilde{V} \tilde{\Sigma}^{-1} W)
+    \tilde{A}                                                                                           \\
+     & = X^\prime \tilde{V} \tilde{\Sigma}^{-1} \tilde{A} W                                             \\
+     & = X^\prime \tilde{V} \tilde{\Sigma}^{-1} W \Lambda                                               \\
+     & = \Phi \Lambda
+\end{align*}
+
+In cases where \(n \gg m\), we may seek more efficient reconstruction of the full-dimensional DMD modes using projected modes \(\Phi = \tilde{U} W\) while losing guarantees of finding the exact eigenvectors of \(A\) \citep{Schmid2010}.
+
+\subsection{Online DMD}
+In most practical applications, sufficient data may not be available on demand but instead become available in a streaming manner. Moreover, many complex systems in nature or engineered ones exhibit time-varying dynamics, under the influence of environmental or operational factors, that we may wish to track over time to maintain the models' validity. In these relevant cases, we can update the underlying decomposition of the data matrix \(X\) over time.
+
+Recently, an attractive way of updating exact DMD in streaming applications was proposed by \citet{Zhang2019}, providing extensive variations to improve tracking of time-varying dynamics without storing the full data matrix \(X\).
+
+\subsection{Algorithm for online DMD updates}\label{sec:online-dmd-updates}
+The initial requirement of online DMD updates in \citet{Zhang2019} is the availability of \(A\). In some instances, we may have recorded (or sufficient time to record) the history of snapshots \(X_k\) up to time step \(k\) enabling initialization of \(A_k\) using the standard DMD algorithm presented in Section~\ref{sec:dmd}. Conversely, initializing \(A_k\) with the identity matrix works well in practice and converges quickly.
+
+In streaming data processing, new pairs of snapshots may become available in real-time or delayed in mini-batches as
+\begin{equation}
+    \{X_{k : k + c}, X^\prime_{k : k + c}\} = {\{x(t_i), x(t_i^\prime )\}}^c_{i=k}.
+\end{equation}
+
+We wish to find an updated matrix \(A_{k+c}\), assuming it is close to \(A_{k}\), enabling the formulation of the problem as recursive least-squares estimation. Under the assumption that the history of snapshots \(X_k\) has rank \(m\), and the matrix \(X_k X_k^\top \) is symmetric and strictly positive definite and has a well-defined inversion, we may rewrite~\eqref{eq:best-fit-operator} as
+\begin{equation}\label{eq:pseudo-inverse}
+    A_k = X^\prime_k X_k^+ = X^\prime_k X_k^\top {(X_k X_k^\top)}^{-1} = Q_k P_k,
+\end{equation}
+
+where \(Q_k\) and \(P_k\) are \(m \times m\) lag covariance matrix and precision matrix respectively, given by
+\begin{align}\label{eq:aux-matrices}
+    Q_k & = X^\prime_k X_k^\top,   \\
+    P_k & = {(X_k X_k^\top)}^{-1}.
+\end{align}
+
+
+%% Start of NOTES
+The DMD matrix may be updated on new pairs of snapshots \( \{X_{k: k + c}, X^\prime_{k: k + c}\} \) by updating the matrices \(Q_k\) and \(P_k\) as
+\begin{align*}
+    Q_{k+c}      & = \begin{bmatrix} X^\prime_k  & X^\prime_{k : k + c} \end{bmatrix} \begin{bmatrix} X_{k} & X_{k : k + c} \end{bmatrix}^\top = X^\prime_k X_{k}^\top + X^\prime_{k : k + c} C_{k : k + c} X_{k : k + c}^\top \\
+    P^{-1}_{k+c} & = \begin{bmatrix} X_{k} & X_{k : k + c} \end{bmatrix} \begin{bmatrix} X_{k} & X_{k : k + c} \end{bmatrix}^\top = X_{k}X_{k}^\top + X_{k : k + c} C_{k : k + c} X_{k : k + c}^\top,
+\end{align*}
+
+where diagonal matrix \(C_{k: k + c}\) holds corresponding weights of samples, desirable in scenarios where multi-fidelity data are available, and external agent defines their fidelity in real-time (e.g.~outlier detector).
+
+The update of \(Q_k\) and \(P_k\) then translates to updated DMD matrix \(A_{k+c}\) as
+\begin{equation}
+    A_{k+c} = (Q_k + X^\prime_{k : k + c} C_{k : k + c} X_{k : k + c}^\top) {(P_k^{-1} + X_{k : k + c} C_{k : k + c} X_{k : k + c}^\top)}^{-1}
+\end{equation}
+
+As both matrices, \(C_{k: k + c}\) \(P_k\) are invertible square matrices due to their properties, the Woodbury formula may be used to compute the inverse of the sum of the matrix and its outer product with a vector obtaining
+\begin{equation}\label{eq:precision-matrix-update}
+    P_{k+c} = {(P_k^{-1} + X_{k : k + c} C_{k : k + c} X_{k : k + c}^\top)}^{-1} = P_k - P_k X_{k : k + c} \Gamma_{k+c} X_{k : k + c}^\top P_k,
+\end{equation}
+
+where
+
+\begin{equation}
+    \Gamma_{k : k + c} = {(C_{k : k + c}^{-1} + X_{k : k + c}^\top P_k X_{k : k + c})}^{-1}.
+\end{equation}
+
+\(\Gamma_{k : k + c}^{-1}\) is always non-zero due to the positive definiteness of \(P_k\), if for all diagonal elements of \(C_{k : k + c}\) applies \( \forall i : c_{ii} \neq 0 \). The inversion of matrix \(C_{k: k + c}\) can be efficiently computed as residuals of diagonal elements.
+
+The final closed-loop form of the updated DMD matrix is then
+\begin{equation}\label{eq:online-dmd-update}
+    A_{k+c} = A_k + (X^\prime_{k : k+c} - A_k X_{k+c}) \Gamma_{k+c} X_{k : k+c}^\top P_k,
+\end{equation}
+
+where \((X^\prime_{k : k+c} - A_k X_{k+c})\) represents the prediction error. The DMD matrix is updated by adding a term proportional to this error, reflecting the data's covariance structure and variable importance through \(C_{k: k + c}\).
+
+\subsection{Windowed Online DMD}
+The DMD updates presented in the previous section enable calibration of the DMD modes in scenarios where snapshots become available over time. Increasing the number of observed snapshots increases the accuracy of identification. However, in time-varying systems, the previous snapshots may become invalid and reduce the validity of the found model. In such cases, it may be desirable to revert the DMD matrix to the state it would have been in if the old snapshots had never been included in the so-called windowed online DMD\@.
+
+To make DMD matrix forget first snapshots seen \( \{X_{c}, X^\prime_{c}\} = {\{x(t_i), x(t_i^\prime )\}}^c_{i=0}\), we simply use the update formulae from~\eqref{eq:precision-matrix-update} and~\eqref{eq:online-dmd-update} providing negative value of their original weights \(-C_{c}\).
+
+This means that the history of snapshot pairs \({\{x(t_i), x(t_i^\prime )\}}^{k+c}_{i=0}\) must be stored until they are reverted. This window might be significantly smaller than all the previously seen data, saving computational resources and memory.
+
+
+\subsection{Online DMD with Control}
+In industrial automation, complex systems to which external control is applied are of interest. DMD can effectively identify internal system dynamics, subtracting the effect of control input. Perhaps more interestingly, it can also be used to evaluate the effect of control on the system \citep{Proctor2016}. From control theory, the (discrete-time) linear time-varying system can be written as
+\begin{equation}\label{eq:linear-system}
+    X_{k+1} = A_k X_{k} + B_k \Theta_{k},
+\end{equation}
+where \(X_k \in \mathbb{R}^{m \times c}\), \(\Theta_k \in \mathbb{R}^{l \times c}\) are the states and control inputs, respectively, \(A_k \in \mathbb{R}^{m \times m}\) is the state matrix, and \(B_k \in \mathbb{R}^{m \times l}\) is the control matrix.
+
+For known control matrix \(B\), the control input may be incorporated into the DMD matrix by simply compensating the output snapshots \(X^\prime_k\) with the control input multiplied by the control matrix \(B\) as
+\begin{equation}\label{eq:control-compensation}
+    \bar{X}^\prime_k = X^\prime_k - B \Theta_k,
+\end{equation}
+
+and use the \(\bar{X}^\prime_k\) in place of \(X^\prime_k\) in the update formulae~\eqref{eq:precision-matrix-update} and~\eqref{eq:online-dmd-update}.
+
+In most scenarios, neither internal structure \(A\) nor the effect of control \(B\) are known. In such cases, the system identification problem may be solved by augmenting the state matrix \(A\) with the control matrix \(B\) as
+% TODO: Denote that in an unsupervised manner, we deal with one-step delayed updates
+\begin{equation}\label{eq:augmented-matrix}
+    \bar{A}_k = \begin{bmatrix} A_k & B_k \end{bmatrix}, \quad \bar{X}_k = \begin{bmatrix} X_k \\ \Theta_k \end{bmatrix} ,
+\end{equation}
+
+where \(\bar{A}_k \in \mathbb{R}^{m \times m + l}\), \(\bar{X}_k \in \mathbb{R}^{m + l \times c}\) are the augumented matrices of \(A_k\) and \(X_k\). We may write~\eqref{eq:linear-system} in the form
+\begin{equation*}
+    X^\prime_k = \bar{A}_k \bar{X}_k.
+\end{equation*}
+
+Similarly to DMD, the matrices \(A_k\) and \(B_k\) may then be found by minimizing the Frobenius norm of \(J_k = \|X^\prime_k - \bar{A}_k \bar{X}_k\|_F\) resulting in the same  formula as in~\eqref{eq:best-fit-operator}
+\begin{equation*}
+    \bar{A}_k = X^\prime_k \bar{X}_k^+.
+\end{equation*}
+
+At time \(k+c\), we incorporate \(c\) new columns into \(\bar{X}_k\) and \(X^\prime_k\), and aim to update \(\bar{A}_{k+c}\) utilizing our prior knowledge of \(\bar{A}_k\). By applying the same method as in Section~\ref{sec:online-dmd-updates}, extending the online DMD to this scenario is straightforward. Specifically, the square matrix \(A_k\) from the DMD is replaced in DMDc with the rectangular matrix \(\bar{A}_k\) defined earlier, and the matrix \(X_k\) in the formulae~\eqref{eq:precision-matrix-update} and~\eqref{eq:online-dmd-update} is substituted with the matrix \(\bar{X}_k\)~\citep{Zhang2019}.
+
+\subsection{Truncating Online DMD with Control}\label{sec:truncating-online-dmd}
+Some of the challenges of online DMD proposed in~\citet{Zhang2019} include the lack of robustness to noise, bad scalability, and decreased numerical stability of small eigenvalue updates. To address these issues, we propose modifying the online DMD algorithm that truncates the DMD matrix to a lower rank. Conventionally, this process in batch-trained DMD relies on the truncated singular value decomposition (SVD) method, which is widely used in data analysis to reduce the dimensionality of data while preserving the most essential information. Nevertheless, computing the SVD of the matrix \(X_k\) is computationally expensive and unsuitable for online learning. Instead, we employ online SVD algorithms that perform low-rank updates of the SVD as new snapshots \(X_k\) become available.
+
+We use the algorithm of \citet{Zhang2022}, a modified version of the originally proposed algorithm by \citet{Brand2006}. The main benefit of this modification is the reorthogonalization rule, which prevents erosion of left singular values orthogonality at a reasonable computational cost. For the details on the algorithm, please refer to the original work of author \citep{Zhang2022}. For consistency of nomenclature, we will refer to the SVD decomposition of the augmented matrix \(\bar{X}_k\) as
+\begin{equation*}
+    \bar{X}_k = \tilde{U}_k \tilde{\Sigma}_k \tilde{V}_k^\top.
+\end{equation*}
+
+The new snapshots \(\bar{X}_{k+c}\) may be used for updating the Online SVD as shown in Algorithm~\ref{alg:online-svd-updates}. Old snapshots may be reverted using Algorithm~\ref{alg:online-svd-reverts}.
+
+\begin{algorithm}[H]
+    \caption{{Online SVD Updates}}\label{alg:online-svd-updates}
+    \begin{algorithmic}[1]
+        \REQUIRE{
+        \(\tilde{U} \in \mathbb{R}^{m \times r}\),
+        \(\tilde{\Sigma} \in \mathbb{R}^{r \times r}\),
+        \(\tilde{V} \in \mathbb{R}^{k \times r}\),
+        \(\bar{X}_{k+c} \in \mathbb{R}^{m \times c}\),
+        \(\ui{q}{u}\),
+        \(\ui{\tilde{\bar{X}}}{buff} \in \mathbb{R}^{k \times \ui{q}{u}}\),
+        \(\text{tol}\),
+        }
+        \ENSURE{
+        \(\tilde{U}\),
+        \(\tilde{\Sigma} \),
+        \(\tilde{V}\),
+        \(\ui{q}{u}\),
+        \(\ui{\tilde{\bar{X}}}{buff} \in \mathbb{R}^{k \times \ui{q}{u}}\),
+        }
+        \\ \textit{Set}: {
+        \(U_0 = \textbf{I}_{r}\);
+        \(\tilde{\bar{X}}_k = \tilde{U}^\top \bar{X}_{k+c}\);
+        \(E = \bar{X}_{k+c} - \tilde{U} \tilde{\bar{X}}_k\);
+        \(E^\prime, \_ \gets \text{qr}(E) \);
+        \(\ui{K}{E'E} = E^{\prime \top} E\);
+        }
+        \IF{\(\ui{K}{E'E} < tol\)}
+        \STATE{
+            \(\ui{q}{u} = \ui{q}{u} + 1\);
+            \(\ui{\tilde{\bar{X}}}{buff}(:, \ui{q}{u}) = \tilde{\bar{X}}_k\);
+        }
+        \ELSE{}
+        \IF{\(\ui{q}{u} > 0\)}
+        \STATE{
+            \(Y = \begin{bmatrix}
+                \tilde{\Sigma}~|~\ui{\tilde{\bar{X}}}{buff}
+            \end{bmatrix}\);
+        }
+        \STATE{
+        \(\begin{bmatrix}
+            \ui{U}{Y}, \ui{\Sigma}{Y}, \ui{V}{Y}
+        \end{bmatrix}\) = \(\text{svd}(Y)\); where \(\ui{U}{Y} \in \mathbb{R}^{r \times r}\),
+        \(\ui{V}{Y} \in \mathbb{R}^{r+\ui{q}{u} \times r}\),
+        }
+        \STATE{
+            \(U_0 = U_0\ui{U}{Y}\);
+            \(\tilde{\Sigma} = \ui{\Sigma}{Y}\);
+            \(V_1 = \ui{V}{Y}(:r, :-1)\);
+            \(\tilde{V}_2 = \ui{V}{Y}(r, :-1)\); \\
+            \(\tilde{V} = \begin{bmatrix}
+                \tilde{V}V_1 \\ V_2
+            \end{bmatrix}\);
+            \(\tilde{\bar{X}}_k = \ui{U}{Y}^\top \tilde{\bar{X}}_k\)
+        }
+        \ENDIF{}
+        \IF{\(|E^{\prime\top} \tilde{U}(:, 0)| > tol\)}
+        \STATE{
+            \(E^\prime = E^\prime - \tilde{U}\tilde{U}^\top E^\prime \);
+            \(E^\prime, \_ \gets \text{qr}(E^\prime) \);
+        }
+        \ENDIF{}
+        \STATE{
+            \(Y = \begin{bmatrix}
+                \tilde{\Sigma} & \tilde{\bar{X}}_k \\ 0 & \ui{K}{E'E}
+            \end{bmatrix}\);
+        }
+        \STATE{
+            \(\begin{bmatrix}
+                \ui{U}{Y}, \ui{\Sigma}{Y}, \ui{V}{Y}
+            \end{bmatrix}\) = \(\text{svd}(Y, \text{rank=}r)\); where \(\ui{U}{Y} \in \mathbb{R}^{r \times r}\), \(\ui{V}{Y} \in \mathbb{R}^{r+c \times r}\),
+        }
+        \STATE{
+            \(\tilde{U} = \begin{bmatrix} \tilde{U}~|~E^\prime \end{bmatrix}U_0\ui{U}{Y}\);
+            where \(\tilde{U} \in \mathbb{R}^{m \times r}\),
+        }
+        \STATE{
+            \(\tilde{\Sigma} = \ui{\Sigma}{Y}\); where \(\tilde{\Sigma} \in \mathbb{R}^{r \times r}\);
+        }
+        \STATE{
+        \(\tilde{V} = \begin{bmatrix} \tilde{V} & 0 \\ 0 & \textbf{I}_{c + \ui{q}{u} \times c} \end{bmatrix}\ui{V}{Y}\);
+        where \(\tilde{V} \in \mathbb{R}^{k+c+\ui{q}{u} \times r}\)
+        }
+        \STATE{
+        \(U_0 = \textbf{I}_{r}\);
+        \(\ui{\tilde{\bar{X}}}{buff} = [-]\);
+        \(\ui{q}{u} = 0\);
+        }
+        \ENDIF{}
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+    \caption{{Online SVD Reverts}}\label{alg:online-svd-reverts}
+    \begin{algorithmic}[1]
+        \renewcommand{\algorithmicrequire}{\textbf{Input:}}
+        \renewcommand{\algorithmicensure}{\textbf{Output:}}
+        \REQUIRE{
+        \(\tilde{U} \in \mathbb{R}^{m \times r}\),
+        \(\tilde{\Sigma} \in \mathbb{R}^{r \times r}\),
+        \(\tilde{V} \in \mathbb{R}^{k+c+\ui{q}{r} \times r}\),
+        \(\bar{X}_{k+c} \in \mathbb{R}^{m \times c}\),
+        \(\ui{q}{r}\),
+        \(\text{tol}\),
+        }
+        \ENSURE{
+            \(\tilde{U} \in \mathbb{R}^{m \times r}\),
+            \(\tilde{\Sigma} \in \mathbb{R}^{r \times r}\),
+            \(\tilde{V} \in \mathbb{R}^{k \times r}\),
+            \(\ui{q}{r}\),
+        }
+        \\ \textit{Set}: {
+        \(B = \begin{bmatrix} \mathbf{0}_{k \times c}  \\ \textbf{I}_{c\times c}\end{bmatrix}\);
+        \(N = \tilde{V}^\top (:, :c)\);
+        \(E = B - \tilde{V} N\);
+        \(E^\prime, \_ \gets \text{qr}(E) \);
+        \(\ui{K}{E'E} = E^{\prime\top} E\);
+        }
+        \IF{\(\ui{K}{E'E} < tol\)}
+        \STATE{
+            \(\ui{q}{r} = \ui{q}{r} + 1\);
+        }
+        \ELSE{}
+        \IF{\(\ui{q}{r} > 0\)}
+        \STATE{
+            \(B = \begin{bmatrix} \mathbf{0}_{k \times c + \ui{q}{r}}  \\ \textbf{I}_{c+ \ui{q}{r} \times c + \ui{q}{r}}\end{bmatrix}\);
+            \(N = \tilde{V}^\top (:, :c + \ui{q}{r})\);
+            \(E = B - \tilde{V} N\);
+            \(E^\prime, \_ \gets \text{qr}(E) \);
+        }
+        \ENDIF{}
+        \STATE{
+            \(\bar{\tilde{\Sigma}} = \begin{bmatrix}
+                \tilde{\Sigma} & 0 \\ 0 & \mathbf{0}_{c+\ui{q}{r}}
+            \end{bmatrix}\)
+        }
+        \STATE{
+            \(Y = \bar{\tilde{\Sigma}} \left(  \textbf{I}_{r + c + \ui{q}{r}} -
+            \begin{bmatrix}
+                N \\ \mathbf{0}_{c + \ui{q}{r}}
+            \end{bmatrix}
+            \begin{bmatrix}
+                N \\ \sqrt{1 - N^\top N}
+            \end{bmatrix}^\top
+            \right)\);
+        }
+        \STATE{
+            \(\begin{bmatrix}
+                \ui{U}{Y}, \ui{\Sigma}{Y}, \ui{V}{Y}
+            \end{bmatrix}\) = \(\text{svd}(Y)\);
+        }
+        \STATE{
+            \(\tilde{U} = \tilde{U}\ui{U}{Y}(:r, :r)\);
+            \(\tilde{\Sigma} = \ui{\Sigma}{Y}(:r, :r)\);
+            \(\tilde{V} = (\begin{bmatrix} \tilde{V}~|~E^\prime \end{bmatrix}\ui{V}{Y})(:k, :r)\);
+        }
+        \STATE{
+            \(\ui{q}{r} = 0\);
+        }
+        \ENDIF{}
+    \end{algorithmic}
+\end{algorithm}
+
+Further, we propose incorporating the truncation using online SVD into the online DMD algorithm described in Section~\ref{sec:online-dmd-updates}. The truncation of the DMD matrix requires a data transformation step before updating the DMD matrix. This transformation is performed by projecting the snapshots onto the first \(r\) POD modes as
+\begin{equation}
+    \{\tilde{\bar{X}}_k, \tilde{X}^\prime_k\} = \{\tilde{U}^\top_k\bar{X}_k, \tilde{U}^\top_k(:m, 1:p)X^\prime_k\}.
+\end{equation}
+
+We wish to update reduced-order matrix \(\tilde{\bar{A}}_k\), a rectangular matrix of size \(p \times p + q\), where \(r = p + q\), \(p\) is the rank of the reduced-order state matrix \(\tilde{A}_k\) and \(q\) is the rank of the reduced-order control matrix \(\tilde{B}_k\).
+
+Assuming we updated online SVD on snapshots \(\bar{X}_k\), we wish to inform reduced-order matrices \(\tilde{\bar{A}}_k\) and \(\tilde{P}_k\) about the change of rotation in scaled coordinate space (column space; the orthonormal basis of features). The change of rotation as new data becomes available can be tracked as \(\uis{K}{U'U}{k} = \tilde{U}_k^\top \tilde{U}_{k-1}\).
+
+To align reduced-order matrices \(\tilde{\bar{A}}_k\) and \(\tilde{P}_k\) with this change in column space, first we decouple \(\uis{K}{U'U}{k}\) as follows:
+\begin{equation}
+    \uis{K}{U'U}{k} = \begin{bmatrix}
+        \uis{K}{U'U}{k, p \times p} & \uis{K}{U'U}{k, p \times q} \\
+        \uis{K}{U'U}{k, q \times p} & \uis{K}{U'U}{k, q \times q}
+    \end{bmatrix},
+\end{equation}
+
+and then apply alignment to the reduced-order matrices as
+
+\begin{align}
+    \tilde{\bar{A}}_k & = \begin{bmatrix} \uis{K}{U'U}{k, p \times p} \tilde{A}_k \uis{K}{U'U}{k, p \times p}^\top & \uis{K}{U'U}{k, p \times p} \tilde{B}_k \uis{K}{U'U}{k, q \times q} \end{bmatrix} , \\
+    \tilde{P}_k       & = {(\uis{K}{U'U}{k} P_k^{-1} \uis{K}{U'U}{k}^\top)}^{-1}.
+\end{align}
+
+
+What follows, is the update of reduced matrices \(\tilde{A}_k\) and \(\tilde{P}_k\) using truncated snapshots \(\tilde{X}_k\) and \(\tilde{X}^\prime_k\). The updates could be performed conveniently using proposed formulae in~\eqref{eq:precision-matrix-update} and~\eqref{eq:online-dmd-update} without modification.
+
+While the computational cost of a mini-batch update is the same as applying the rank-one updates \(c\) times in the original formulation in Section~\ref{sec:online-dmd-updates}, the mini-batch updates of the proposed truncated online DMD yield significant benefits in computational cost.
+
+\subsection{Hankel DMD}\label{sec:hankel-dmd}
+Hankel DMD addresses several key problems in analyzing dynamical systems, particularly when dealing with certain complex, non-linear, or controlled systems with unknown time delays. The main idea is to construct a Hankel matrix from the data matrix \(X\) by embedding delay coordinates forming a Hankel matrix \(\bar{X}_{h, c}\). The Hankel matrix is then decomposed using DMD to find the low-rank representation of the system. Given snapshots \({\{x(t_i)\}}^c_{i=0}\), the \(h\)-times delayed embedding matrix \(\bar{X}_{h, c}\) of shape \(m + h \times c\) is formed as
+\begin{equation}\label{eq:hankel}
+    \bar{X}_{h, c} = \begin{bmatrix}
+        x_0    & x_1       & \cdots & x_{c - h} \\
+        \vdots & \vdots    & \ddots & \vdots    \\
+        x_{h}  & x_{h + 1} & \cdots & x_{c},
+    \end{bmatrix}
+\end{equation}
+
+which can be combined with rank-one updates by storing and vertically stacking snapshots \({\{x(t_i)\}}^{k+c}_{i=k}\) at each time step \(k\) and passing it to updates of DMD.~This will allow setting the larger number of time-delays, in case we wish to have \(h > c\). For particularly large systems with slow dynamics, we may specify delay steps \(h_d\) along with total time-delay to find a balance between computational cost and accuracy of capturing the system dynamics. This means that our embedding will be composed of snapshots \( [x_0, x_{h_d}, \ldots, x_h] \), sampled at the time intervals specified by the delay steps.
+
+The updates of DMD, once again, employ~\eqref{eq:precision-matrix-update} and~\eqref{eq:online-dmd-update} providing time delayed embedding of snapshots pair \(\bar{X}_{h, c}\) and \(\bar{X}^\prime_{h, c}\).
