@@ -1,0 +1,121 @@
+site_name: ODMD-SUBID-CPD
+site_author: Marek Wadinger
+
+# Repository
+repo_name: odmd-subid-cpd
+repo_url: https://github.com/MarekWadinger/odmd-subid-cpd
+edit_uri: ""
+
+watch: [mkdocs.yml, README.md]
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+
+nav:
+  - Home: index.md
+  - API Reference: reference/
+
+# Styling
+theme:
+  name: material
+  color_mode: auto
+  user_color_mode_toggle: false
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Titillium Web
+    code: Fira Code
+  features:
+    - content.code.copy # Copy code button
+    - content.code.annotate # Annotate code blocks
+    - navigation.tabs # Tabs navigation
+    - navigation.tabs.sticky
+    - navigation.instant
+    - navigation.indexes
+    - navigation.prune
+    - navigation.top
+    - navigation.footer
+    - navigation.sections
+    - toc.follow
+
+extra_css:
+  - stylesheets/extra.css
+
+# Configuration
+plugins:
+  - search
+  - gen-files:
+      scripts:
+        - scripts/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - mkdocstrings:
+      handlers:
+        python:
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://mkdocstrings.github.io/objects.inv
+            - https://mkdocstrings.github.io/autorefs/objects.inv
+            - https://mkdocstrings.github.io/griffe/objects.inv
+            - https://python-markdown.github.io/objects.inv
+          options:
+            docstring_options:
+              ignore_init_summary: true
+            docstring_section_style: list
+            filters: ["!^_"]
+            heading_level: 1
+            inherited_members: true
+            merge_init_into_class: true
+            parameter_headings: true
+            preload_modules: [mkdocstrings]
+            relative_crossrefs: true
+            scoped_crossrefs: true
+            separate_signature: true
+            show_inheritance_diagram: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_signature_annotations: true
+            show_source: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            signature_crossrefs: true
+            summary: true
+            unwrap_annotated: true
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - attr_list
+  - admonition # convert block quotes to admonitions
+  - footnotes
+  - tables
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.blocks.tab:
+      alternate_style: true
+  - pymdownx.highlight:
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.arithmatex:
+      generic: true
+  - toc:
+      permalink: true
+      toc_depth: "1-3"
