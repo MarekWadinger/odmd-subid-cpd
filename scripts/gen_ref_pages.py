@@ -13,6 +13,10 @@ for path in sorted(src.rglob("*.py")):
     if any(part.startswith(".") for part in path.parts):
         continue
 
+    dir_path = path.parent
+    if dir_path != root and not (dir_path / "__init__.py").exists():
+        continue
+
     module_path = path.relative_to(src).with_suffix("")
     doc_path = path.relative_to(src).with_suffix(".md")
     full_doc_path = Path("reference", doc_path)

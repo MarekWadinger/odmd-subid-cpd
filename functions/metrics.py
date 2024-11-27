@@ -1,5 +1,5 @@
 """
-This module is modified part of evaluation from library (tsad)[https://github.com/waico/tsad]
+This module is modified part of evaluation from library [tsad](https://github.com/waico/tsad)
 """
 
 from typing import Any
@@ -10,8 +10,21 @@ import pandas as pd
 
 def filter_detecting_boundaries(detecting_boundaries):
     """
-    [[t1,t2],[],[t1,t2]] -> [[t1,t2],[t1,t2]]
-    [[],[]] -> []
+    Filters out empty sublists from a list of detecting boundaries.
+
+    Args:
+        detecting_boundaries (list of list): A list containing sublists,
+                                             where each sublist represents a boundary.
+
+    Returns:
+        list of list: A list containing only the non-empty sublists from the input.
+
+    Examples:
+        >>> filter_detecting_boundaries([[1, 2], [], [1, 2]])
+        [[1, 2], [1, 2]]
+
+        >>> filter_detecting_boundaries([[], []])
+        []
     """
     _detecting_boundaries = []
     for couple in detecting_boundaries.copy():
@@ -104,15 +117,16 @@ def single_detecting_boundaries(
 
 def check_errors(my_list):
     """
-    Check format of input true data
+    Check format of input true data.
 
-    Parameters
-    ----------
-    my_list - uniform format of true (See evaluate.evaluate)
+    Args:
+        my_list (list): Uniform format of true data (See evaluate.evaluate).
 
-    Returns
-    ----------
-    mx : depth of list, or variant of processing
+    Returns:
+        int: Depth of list, or variant of processing.
+
+    Raises:
+        Exception: If non-uniform data format is found at any level.
     """
     assert isinstance(my_list, list)
     mx = 1
@@ -164,14 +178,19 @@ def extract_cp_confusion_matrix(
     detecting_boundaries, prediction, point=0, binary=False
 ):
     """
-    prediction: pd.Series
+    Extracts the confusion matrix for change point detection.
 
-    point=None for binary case
-    Returns
-    ----------
-    dict: TPs: dict of numer window of [t1,t_cp,t2]
-    FPs: list of timestamps
-    FNs: list of numer window
+    Args:
+        detecting_boundaries (list of list of int): List of pairs of start and end times for detecting boundaries.
+        prediction (pd.Series): Series containing the prediction results with timestamps.
+        point (int, optional): Index of the predicted change point within the window. Defaults to 0.
+        binary (bool, optional): Flag indicating whether to use binary classification. Defaults to False.
+
+    Returns:
+        dict: A dictionary containing:
+            - 'TPs' (dict): Dictionary of true positives with window indices as keys and lists of [start, predicted, end] times as values.
+            - 'FPs' (list): List of false positive timestamps.
+            - 'FNs' (list): List of false negative window indices or timestamps.
     """
     _detecting_boundaries = []
     for couple in detecting_boundaries.copy():
@@ -353,27 +372,38 @@ def single_evaluate_nab(
     clear_anomalies_mode=True,
     scale_func="improved",
     scale_koef=1,
-):
+) -> np.ndarray:
     """
+    Evaluate the NAB (Numenta Anomaly Benchmark) score for a given set of predictions.
 
-    detecting_boundaries: list of list of two float values
-                The list of lists of left and right boundary indices
-                for scoring results of labeling if empty. Can be [[]], or [[],[t1,t2],[]]
-    table_of_coef: pandas array (3x4) of float values
-                Table of coefficients for NAB score function
-                indices: 'Standard','LowFP','LowFN'
-                columns:'A_tp','A_fp','A_tn','A_fn'
+    Args:
+        detecting_boundaries (list of list of two float values):
+            The list of lists of left and right boundary indices for scoring results of labeling.
+            If empty, can be [[]], or [[],[t1,t2],[]].
+        prediction (list):
+            The list of predicted anomaly points.
+        table_of_coef (pandas DataFrame, optional):
+            Table of coefficients for NAB score function.
+            Default is a 3x4 DataFrame with indices 'Standard', 'LowFP', 'LowFN' and columns 'A_tp', 'A_fp', 'A_tn', 'A_fn'.
+        clear_anomalies_mode (bool, optional):
+            If True, the left of Atp boundary is equal to the right of Afp.
+            Otherwise, fault mode, when the left of Afp boundary is the right of Atp. Default is True.
+        scale_func (str, optional):
+            The scaling function to use. Default is "improved".
+            If not "improved", an exception is raised.
+        scale_koef (int, optional):
+            The scaling coefficient. Default is 1.
+            1 - depends on the relative step, which means that if there are too many points in the scoring window, the difference will be too large.
+            too many points in the scoring window, the drop will be too
+            stiff in the middle.
+            2- the leftmost point is not equal to Atp and the right is not equal to Afp.
+            (especially if you use a blurring multiplier).
 
-    scale_func {default}, improved
-    недостатки scale_func default  -
-    1 - зависит от относительного шага, а это значит, что если
-    слишком много точек в scoring window то перепад будет слишком
-    жестким в середение.
-    2-   то самая левая точка не равно  Atp, а права не равна Afp
-    (особенно если пррименять расплывающую множитель)
-
-    clear_anomalies_mode тогда слева от границы Atp срправа Afp,
-    иначе fault mode, когда слева от границы Afp срправа Atp
+    Returns:
+        numpy.ndarray:
+            A 3xN array where N is the number of profiles ('Standard', 'LowFP', 'LowFN').
+            The first row contains the scores, the second row contains the null scores,
+            and the third row contains the perfect scores.
     """
     if scale_func == "improved":
         scale_func = my_scale
@@ -438,219 +468,118 @@ def chp_score(
     verbose=False,
 ):
     """
-    Parameters
-    ----------
-    true: variants:
-        or: if one dataset : pd.Series with binary int labels (1 is
-        anomaly, 0 is not anomaly);
+    Calculates various metrics for evaluating anomaly or changepoint detection.
 
-        or: if one dataset : list of pd.Timestamp of true labels, or []
-        if haven't labels ;
+    Args:
+        true (pd.Series or list): True labels of anomalies or changepoints.
+            Can be in various formats:
+            - pd.Series with binary int labels (1 is anomaly, 0 is not anomaly)
+            - list of pd.Timestamp of true labels
+            - list of list of t1, t2: left and right detection boundaries of pd.Timestamp
+            - list of pd.Series with binary int labels for multiple datasets
+            - list of list of pd.Timestamp of true labels for multiple datasets
+            - list of list of list of t1, t2: left and right detection boundaries of pd.Timestamp for multiple datasets
+        prediction (pd.Series or list): Predicted labels of anomalies or changepoints.
+            Can be in various formats:
+            - pd.Series with binary int labels (1 is anomaly, 0 is not anomaly)
+            - list of pd.Series with binary int labels for multiple datasets
+        metric (str): Metric to use for evaluation. Options are {'nab', 'binary', 'average_time', 'confusion_matrix'}. Default is 'nab'.
+        window_width (str): Width of detection window as a pd.Timedelta string. Default is None.
+        portion (float): Portion of the width of the length of prediction divided by the number of real CPs in the dataset. Default is 0.1.
+        anomaly_window_destination (str): Location of the detection window relative to the anomaly. Options are {'lefter', 'righter', 'center'}. Default is 'lefter'.
+        clear_anomalies_mode (bool): If True, only the first value inside the detection window is taken. If False, only the last value inside the detection window is taken. Default is True.
+        intersection_mode (str): How to handle overlapping detection windows. Options are {'cut left window', 'cut right window', 'both'}. Default is 'cut right window'.
+        table_of_coef (pd.DataFrame): Application profiles of NAB metric. Default is None.
+        scale_func (str): Scoring function in NAB metric. Options are {'default', 'improved'}. Default is 'improved'.
+        scale_koef (float): Smoothing factor for the scoring function. Default is 1.
+        verbose (bool): If True, outputs useful information. Default is False.
 
-        or: if one dataset : list of list of t1,t2: left and right
-        detection, boundaries of pd.Timestamp or [[]] if haven't labels
+    Returns:
+        tuple or dict: Value of the metrics depending on the chosen metric.
+            - 'nab': dict with keys 'Standard', 'LowFP', 'LowFN' and corresponding float values.
+            - 'average_time': tuple with average time (float), missing changepoints (int), false positives (int), number of true changepoints (int).
+            - 'binary': tuple with F1 metric (float), false alarm rate (float), missing alarm rate (float).
+            - 'confusion_matrix': tuple with true positives (int), true negatives (int), false positives (int), false negatives (int).
 
-        or: if many datasets: list (len of number of datasets) of pd.Series
-        with binary int labels;
+    Examples:
+        >>> y_true = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
 
-        or: if many datasets: list of list of pd.Timestamp of true labels, or
-        true = [ts,[]] if haven't labels for specific dataset;
-
-        or: if many datasets: list of list of list of t1,t2: left and right
-        detection boundaries of pd.Timestamp;
-        If we haven't true labels for specific dataset then we must insert
-        empty list of labels: true = [[[]],[[t1,t2],[t1,t2]]].
-
-        __True labels of anomalies or changepoints.
-        It is important to have appropriate labels (CP or
-        anomaly) for corresponding metric (See later "metric")
-
-    prediction: variants:
-        or: if one dataset : pd.Series with binary int labels
-        (1 is anomaly, 0 is not anomaly);
-
-        or: if many datasets: list (len of number of datasets)
-        of pd.Series with binary int labels.
-
-        __Predicted labels of anomalies or changepoints.
-        It is important to have appropriate labels (CP or
-        anomaly) for corresponding metric (See later "metric")
-
-    metric: {'nab', 'binary', 'average_time', 'confusion_matrix'}.
-        Default='nab'
-        Affects to output (see later: Returns)
-        Changepoint problem: {'nab', 'average_time'}.
-        Standard AD problem: {'binary', 'confusion_matrix'}.
-        'nab' is Numenta Anomaly Benchmark metric
-
-        'average_time' is both average delay or time to failure
-        depend on situation.
-
-        'binary': FAR, MAR, F1.
-
-        'confusion_matrix' standard confusion_matrix for any point.
-
-    window_width: 'str' for pd.Timedelta
-        Width of detection window. Default=None.
-
-    portion : float, default=0.1
-        The portion is needed if window_width = None.
-        The width of the detection window in this case is equal
-        to a portion of the width of the length of prediction divided
-        by the number of real CPs in this dataset. Default=0.1.
-
-    anomaly_window_destination: {'lefter', 'righter', 'center'}. Default='right'
-        The parameter of the location of the detection window relative to the anomaly.
-        'lefter'  : the detection window will be on the left side of the anomaly
-        'righter' : the detection window will be on the right side of the anomaly
-        'center'  : the scoring window will be positioned relative to the center of anom.
-
-    clear_anomalies_mode : boolean, default=True.
-        True : then the `left value of a Scoring function is Atp and the
-        `right is Afp. Only the `first value inside the detection window is taken.
-        False: then the `right value of a Scoring function is Atp and the
-        `left is Afp. Only the `last value inside the detection window is taken.
-
-    intersection_mode: {'cut left window', 'cut right window', 'both'}.
-        Default='cut right window'
-        The parameter will be used if the detection windows overlap for
-        true changepoints, which is generally undesirable and requires a
-        different approach than simply cropping the scoring window using
-        this parameter.
-        'cut left window' : will cut the overlapping part of the left window
-        'cut right window': will cut the intersecting part of the right window
-        'both'            : will crop the intersecting portion of both the left
-        and right windows
-
-    verbose:  boolean, default=True.
-        If True, then output useful information
-
-    plot_figure : boolean, default=False.
-        If True, then drawing the score fuctions, detection windows and predictions
-        It is used for example, for calibration the scale_koef.
-
-    table_of_coef (metric='nab'): pd.DataFrame of specific form. See bellow.
-        Application profiles of NAB metric.If Default is None:
-        table_of_coef = pd.DataFrame([[1.0,-0.11,1.0,-1.0],
-                                      [1.0,-0.22,1.0,-1.0],
-                                      [1.0,-0.11,1.0,-2.0]])
-        table_of_coef.index = ['Standard','LowFP','LowFN']
-        table_of_coef.index.name = "Metric"
-        table_of_coef.columns = ['A_tp','A_fp','A_tn','A_fn']
-
-    scale_func (metric='nab'): "default" of "improved". Default="improved".
-        Scoring function in NAB metric.
-        'default'  : standard NAB scoring function
-        'improved' : Our function for resolving disadvantages
-        of standard NAB scoring function
-
-    scale_koef : float > 0. Default=1.0.
-        Smoothing factor. The smaller it is,
-        the smoother the scoring function is.
-
-    Returns
-    ----------
-    metrics : value of metrics, depend on metric
-        'nab': tuple
-            - Standard profile, float
-            - Low FP profile, float
-            - Low FN profile
-        'average_time': tuple
-            - Average time (average delay, or time to failure)
-            - Missing changepoints, int
-            - FPs, int
-            - Number of true changepoints, int
-        'binary': tuple
-            - F1 metric, float
-            - False alarm rate, %, float
-            - Missing Alarm Rate, %, float
-        'binary': tuple
-            - TPs, int
-            - TNs, int
-            - FPs, int
-            - FNS, int
-
-    Examples
-    --------
-
-    >>> y_true = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
-
-    >>> y_pre1 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    >>> y_pre2 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-    >>> y_pre3 = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    >>> y_pre4 = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-    >>> y_pre5 = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+        >>> y_pre1 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        >>> y_pre2 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+        >>> y_pre3 = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        >>> y_pre4 = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+        >>> y_pre5 = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
 
 
-    >>> def convert_comp(y):
-    ...     y_ = pd.Series(y)
-    ...     y_.index = pd.to_datetime(y_.index, unit="s")
-    ...     return y_
+        >>> def convert_comp(y):
+        ...     y_ = pd.Series(y)
+        ...     y_.index = pd.to_datetime(y_.index, unit="s")
+        ...     return y_
 
 
-    >>> y_true_ = convert_comp(y_true)
-    >>> for y_pred in [y_pre1, y_pre2, y_pre3, y_pre4, y_pre5]:
-    ...     print(f"{y_true}{y_pred}")
-    ...     y_pred = convert_comp(y_pred)
-    ...     print("=== Binary ===")
-    ...     print(chp_score(
-    ...         y_true_,
-    ...         y_pred,
-    ...         metric="binary",
-    ...     ))
-    ...     print("=== Average time ===")
-    ...     print(chp_score(
-    ...         y_true_,
-    ...         y_pred,
-    ...         metric="average_time",
-    ...         window_width="3s",
-    ...         anomaly_window_destination="righter",
-    ...         portion=1,
-    ...     ))
-    ...     print("=== NAB ===")
-    ...     print(chp_score(
-    ...         y_true_,
-    ...         y_pred,
-    ...         metric="nab",
-    ...         window_width="3s",
-    ...         anomaly_window_destination="righter",
-    ...         portion=1,
-    ...     ))
-    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    === Binary ===
-    (0.0, 0.0, 100.0)
-    === Average time ===
-    (nan, 1, 0, 1)
-    === NAB ===
-    {'Standard': 0.0, 'LowFP': 0.0, 'LowFN': 0.0}
-    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-    === Binary ===
-    (0.0, 16.67, 100.0)
-    === Average time ===
-    (Timedelta('0 days 00:00:03'), 0, 0, 1)
-    === NAB ===
-    {'Standard': 44.5, 'LowFP': 39.0, 'LowFN': 63.0}
-    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    === Binary ===
-    (0.0, 16.67, 100.0)
-    === Average time ===
-    (nan, 1, 1, 1)
-    === NAB ===
-    {'Standard': -5.5, 'LowFP': -11.0, 'LowFN': -3.67}
-    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-    === Binary ===
-    (0.25, 100.0, 0.0)
-    === Average time ===
-    (Timedelta('0 days 00:00:00'), 0, 3, 1)
-    === NAB ===
-    {'Standard': 83.5, 'LowFP': 67.0, 'LowFN': 89.0}
-    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
-    === Binary ===
-    (1.0, 0.0, 0.0)
-    === Average time ===
-    (Timedelta('0 days 00:00:00'), 0, 0, 1)
-    === NAB ===
-    {'Standard': 100.0, 'LowFP': 100.0, 'LowFN': 100.0}
+        >>> y_true_ = convert_comp(y_true)
+        >>> for y_pred in [y_pre1, y_pre2, y_pre3, y_pre4, y_pre5]:
+        ...     print(f"{y_true}{y_pred}")
+        ...     y_pred = convert_comp(y_pred)
+        ...     print("=== Binary ===")
+        ...     print(chp_score(
+        ...         y_true_,
+        ...         y_pred,
+        ...         metric="binary",
+        ...     ))
+        ...     print("=== Average time ===")
+        ...     print(chp_score(
+        ...         y_true_,
+        ...         y_pred,
+        ...         metric="average_time",
+        ...         window_width="3s",
+        ...         anomaly_window_destination="righter",
+        ...         portion=1,
+        ...     ))
+        ...     print("=== NAB ===")
+        ...     print(chp_score(
+        ...         y_true_,
+        ...         y_pred,
+        ...         metric="nab",
+        ...         window_width="3s",
+        ...         anomaly_window_destination="righter",
+        ...         portion=1,
+        ...     ))
+        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        === Binary ===
+        (0.0, 0.0, 100.0)
+        === Average time ===
+        (nan, 1, 0, 1)
+        === NAB ===
+        {'Standard': 0.0, 'LowFP': 0.0, 'LowFN': 0.0}
+        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+        === Binary ===
+        (0.0, 16.67, 100.0)
+        === Average time ===
+        (Timedelta('0 days 00:00:03'), 0, 0, 1)
+        === NAB ===
+        {'Standard': 44.5, 'LowFP': 39.0, 'LowFN': 63.0}
+        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        === Binary ===
+        (0.0, 16.67, 100.0)
+        === Average time ===
+        (nan, 1, 1, 1)
+        === NAB ===
+        {'Standard': -5.5, 'LowFP': -11.0, 'LowFN': -3.67}
+        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+        === Binary ===
+        (0.25, 100.0, 0.0)
+        === Average time ===
+        (Timedelta('0 days 00:00:00'), 0, 3, 1)
+        === NAB ===
+        {'Standard': 83.5, 'LowFP': 67.0, 'LowFN': 89.0}
+        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0][0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+        === Binary ===
+        (1.0, 0.0, 0.0)
+        === Average time ===
+        (Timedelta('0 days 00:00:00'), 0, 0, 1)
+        === NAB ===
+        {'Standard': 100.0, 'LowFP': 100.0, 'LowFN': 100.0}
     """
 
     assert isinstance(true, pd.Series) or isinstance(true, list)

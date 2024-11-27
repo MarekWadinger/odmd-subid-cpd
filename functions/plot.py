@@ -125,7 +125,7 @@ def plot_chd(
             1,
             sharex="col",
             sharey="row",
-            figsize=set_size(**fig_kwargs_),
+            figsize=set_size(**fig_kwargs_),  # type: ignore
         )
     else:
         axs_ = axs
