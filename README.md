@@ -81,9 +81,6 @@ approaches.
 [open an issue](https://github.com/MarekWadinger/odmd-subid-cpd/issues/new/choose)
 if you think you've spotted a bug or a performance issue.
 
-Please check out the [contribution guidelines](CONTRIBUTING.md)
-if you want to bring modifications to the code base.
-
 ## 🛠 For Developers
 
 ### Installation (for Local Use)
