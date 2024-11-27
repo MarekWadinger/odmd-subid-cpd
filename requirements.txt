@@ -1,0 +1,9 @@
+black<30.0.0
+mkdocs-material<10.0.0
+mkdocstrings-python<2.0.0
+mkdocs-gen-files
+mkdocs-literate-nav
+mkdocs-section-index
+mkdocs-charts-plugin
+mkdocs-include-markdown-plugin<10.0.0
+markdown-exec<2.0.0
