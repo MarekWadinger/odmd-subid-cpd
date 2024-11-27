@@ -11,27 +11,28 @@ def separate_args_kwargs(list_of_tuples):
     Imagine transposing a list of tuples. This function separates list of args and kwargs tuples and makes args and kwargs containing most compatible iterables.
 
     Examples:
-    >>> separate_args_kwargs(
-    ...     [((1, 2), {'x': 3, 'y': 4}), ((5, 6), {'x': 8, 'y': 9})])
-    ([[1, 5], [2, 6]], {'x': [3, 8], 'y': [4, 9]})
-    >>> separate_args_kwargs(
-    ...     [((np.array([1, 2 ]),), {'x': np.array([3,  4]), 'y': np.array([5,  6])}),
-    ...     ((np.array([ 2, 3]),), {'x': np.array([4, 5]), 'y': np.array([6 , 7])})])
-    ([array([[1, 2],
-           [2, 3]])], {'x': array([[3, 4],
-           [4, 5]]), 'y': array([[5, 6],
-           [6, 7]])})
-    >>> separate_args_kwargs(
-    ...     [(({'a': 1, 'b': 2},), {'x': {'a': 3, 'b': 4}, 'y': {'a': 5, 'b': 6}}),
-    ...     (({'a': 7, 'b': 8},), {'x': {'a': 7, 'b': 8}, 'y': {'a': 7, 'b': 8}})])
-    ([   a  b
-    0  1  2
-    1  7  8], {'x':    a  b
-    0  3  4
-    1  7  8, 'y':    a  b
-    0  5  6
-    1  7  8})
+        >>> separate_args_kwargs(
+        ...     [((1, 2), {'x': 3, 'y': 4}), ((5, 6), {'x': 8, 'y': 9})])
+        ([[1, 5], [2, 6]], {'x': [3, 8], 'y': [4, 9]})
+        >>> separate_args_kwargs(
+        ...     [((np.array([1, 2 ]),), {'x': np.array([3,  4]), 'y': np.array([5,  6])}),
+        ...     ((np.array([ 2, 3]),), {'x': np.array([4, 5]), 'y': np.array([6 , 7])})])
+        ([array([[1, 2],
+            [2, 3]])], {'x': array([[3, 4],
+            [4, 5]]), 'y': array([[5, 6],
+            [6, 7]])})
+        >>> separate_args_kwargs(
+        ...     [(({'a': 1, 'b': 2},), {'x': {'a': 3, 'b': 4}, 'y': {'a': 5, 'b': 6}}),
+        ...     (({'a': 7, 'b': 8},), {'x': {'a': 7, 'b': 8}, 'y': {'a': 7, 'b': 8}})])
+        ([   a  b
+        0  1  2
+        1  7  8], {'x':    a  b
+        0  3  4
+        1  7  8, 'y':    a  b
+        0  5  6
+        1  7  8})
     """
+
     args_: list[Any] = []
     kwargs_: dict[str | int, Any] = {}
     args_types = []
@@ -82,40 +83,36 @@ class Rolling(R):
     Inputs to `update` are stored in a queue. Elements of the queue are popped when the window is
     full.
 
-    Parameters
-    ----------
-    obj
-        An object that implements both an `update` method and a `rolling `method.
-    window_size
-        Size of the window.
+    Args:
+        obj: An object that implements both an `update` method and a `rolling` method.
+        window_size: Size of the window.
 
-    Examples
-    --------
+    Examples:
+        For instance, here is how you can compute a rolling average over a window of size 3:
 
-    For instance, here is how you can compute a rolling average over a window of size 3:
-    >>> np.random.seed(0)
-    >>> r = 1
-    >>> m = 2
-    >>> n = 5
-    >>> X = pd.DataFrame(np.linalg.qr(np.random.randn(n, m))[0])
-    >>> from river.decomposition import OnlineSVD
+        >>> np.random.seed(0)
+        >>> r = 1
+        >>> m = 2
+        >>> n = 5
+        >>> X = pd.DataFrame(np.linalg.qr(np.random.randn(n, m))[0])
+        >>> from river.decomposition import OnlineSVD
 
-    >>> svd = Rolling(OnlineSVD(n_components=r, initialize=5, seed=0), window_size=5)
-    >>> rsvd = Rolling(OnlineSVD(n_components=r, initialize=5, seed=0), window_size=5)
+        >>> svd = Rolling(OnlineSVD(n_components=r, initialize=5, seed=0), window_size=5)
+        >>> rsvd = Rolling(OnlineSVD(n_components=r, initialize=5, seed=0), window_size=5)
 
-    >>> for x in X.to_dict(orient='records'):
-    ...     rsvd.update(x=x)
-    >>> svd.update_many(x=X)
-    >>> svd.n_seen == rsvd.n_seen
-    True
-    >>> np.abs(svd.transform_one(x)[0]) == np.abs(rsvd.transform_one(x)[0])
-    True
-    >>> X = pd.DataFrame(np.linalg.qr(np.random.randn(2, m))[0])
-    >>> for x in X.to_dict(orient='records'):
-    ...     rsvd.update(x=x)
-    >>> svd.update_many(x=X)
-    >>> np.abs(svd.transform_one(x)[0]) == np.abs(rsvd.transform_one(x)[0])
-    True
+        >>> for x in X.to_dict(orient='records'):
+        ...     rsvd.update(x=x)
+        >>> svd.update_many(x=X)
+        >>> svd.n_seen == rsvd.n_seen
+        True
+        >>> np.abs(svd.transform_one(x)[0]) == np.abs(rsvd.transform_one(x)[0])
+        True
+        >>> X = pd.DataFrame(np.linalg.qr(np.random.randn(2, m))[0])
+        >>> for x in X.to_dict(orient='records'):
+        ...     rsvd.update(x=x)
+        >>> svd.update_many(x=X)
+        >>> np.abs(svd.transform_one(x)[0]) == np.abs(rsvd.transform_one(x)[0])
+        True
     """
 
     def __init__(self, obj, window_size):

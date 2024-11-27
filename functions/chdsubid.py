@@ -104,20 +104,20 @@ class SubIDChangeDetector(AnomalyDetector):
         grace_period (int, optional): Grace period. Defaults to 0.
         learn_after_grace (bool, optional): Learn after grace period. Defaults to True.
         start_soon (bool, optional): Start detection as soon as possible. Defaults to False.
-            True (test: o, ref: x, both: w, none: .):
-                3: www      (started)
-                4: xwwo
-                5: xxwoo
-                6: xxxooo
-                7: xxx.ooo
-                8: .xxx.ooo
-            False (test: o, ref: x, both: w, none: .):
-                3: ooo
-                4: .ooo
-                5: x.ooo
-                6: xx.ooo
-                7: xxx.ooo  (started)
-                8: .xxx.ooo
+        True (test: o, ref: x, both: w, none: .):
+            3: www      (started)
+            4: xwwo
+            5: xxwoo
+            6: xxxooo
+            7: xxx.ooo
+            8: .xxx.ooo
+        False (test: o, ref: x, both: w, none: .):
+            3: ooo
+            4: .ooo
+            5: x.ooo
+            6: xx.ooo
+            7: xxx.ooo  (started)
+            8: .xxx.ooo
     """
 
     def __init__(
@@ -217,6 +217,7 @@ class SubIDChangeDetector(AnomalyDetector):
             D_train, D_test = self.distances
             score_ = (D_test / D_train) - 1
             # TODO: explore interesting scoring option
+            # TODO: explore weighting of individual terms
             # score = D_train - D_test
             # TODO: figure out proper way of utilizing imaginary part of score
             if isinstance(score_, complex):

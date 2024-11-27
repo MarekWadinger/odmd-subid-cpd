@@ -13,31 +13,38 @@ class Hankelizer(H):
     The _memory_usage differs from the original Hankelizer due to storing the
     transformation track which can be significant for large datasets.
 
+    Args:
+        w (int): The window size.
+        return_partial (bool | Literal["copy"]): Whether to return the partial Hankel matrix.
+
+    Attributes:
+        transform_track (list[dict]): The transformation track.
+
     Examples:
-    Using Mini-batch Hankelizer is equivalent to
-    >>> import numpy as np
-    >>> import pandas as pd
-    >>> from river.preprocessing import Hankelizer as H
-    >>> X_train = pd.DataFrame(np.random.rand(10, 2), columns=["a", "b"])
-    >>> hn = 3
-    >>> hankelizer = Hankelizer(hn)
-    >>> hankelizer_old = H(hn)
+        Using Mini-batch Hankelizer is equivalent to
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> from river.preprocessing import Hankelizer as H
+        >>> X_train = pd.DataFrame(np.random.rand(10, 2), columns=["a", "b"])
+        >>> hn = 3
+        >>> hankelizer = Hankelizer(hn)
+        >>> hankelizer_old = H(hn)
 
-    >>> hankelizer.learn_many(X_train)
-    >>> X_t_new = hankelizer.transform_many(X_train)
-    >>> X_t_old_ = []
-    >>> for j, x in enumerate(X_train.to_dict(orient="records")):
-    ...     hankelizer_old.learn_one(x)
-    ...     X_t_old_.append(hankelizer_old.transform_one(x))
-    >>> X_t_old = pd.DataFrame(X_t_old_)
-    >>> X_t_new.equals(X_t_old)
-    True
+        >>> hankelizer.learn_many(X_train)
+        >>> X_t_new = hankelizer.transform_many(X_train)
+        >>> X_t_old_ = []
+        >>> for j, x in enumerate(X_train.to_dict(orient="records")):
+        ...     hankelizer_old.learn_one(x)
+        ...     X_t_old_.append(hankelizer_old.transform_one(x))
+        >>> X_t_old = pd.DataFrame(X_t_old_)
+        >>> X_t_new.equals(X_t_old)
+        True
 
-    Calling transform_many first produces consistent behavior
-    >>> hankelizer = Hankelizer(hn)
-    >>> X_t_first = hankelizer.transform_many(X_train)
-    >>> X_t_first.equals(X_t_new)
-    True
+        Calling transform_many first produces consistent behavior
+        >>> hankelizer = Hankelizer(hn)
+        >>> X_t_first = hankelizer.transform_many(X_train)
+        >>> X_t_first.equals(X_t_new)
+        True
     """
 
     def __init__(
@@ -88,31 +95,31 @@ def hankel(
         - [ ] Add support for 2D arrays.
 
     Example:
-    >>> X = np.array([1., 2., 3., 4., 5.])
-    >>> hankel(X, 3)
-    array([[1., 1., 1.],
-           [1., 1., 2.],
-           [1., 2., 3.],
-           [2., 3., 4.],
-           [3., 4., 5.]])
-    >>> hankel(X, 3, return_partial=False)
-    array([[1., 2., 3.],
-           [2., 3., 4.],
-           [3., 4., 5.]])
-    >>> X = np.array([[1., 2., 3., 4., 5.], [9., 8., 7., 6., 5.]]).T
-    >>> hankel(X, 3, return_partial=True)
-    array([[nan, nan, nan, nan,  1.,  9.],
-           [nan, nan,  1.,  9.,  2.,  8.],
-           [ 1.,  9.,  2.,  8.,  3.,  7.],
-           [ 2.,  8.,  3.,  7.,  4.,  6.],
-           [ 3.,  7.,  4.,  6.,  5.,  5.]])
-    >>> X = np.array([[1.0, 2.0, 3.0, 4.0, 5.0], [9.0, 8.0, 7.0, 6.0, 5.0]]).T
-    >>> hankel(X, 3, 2, return_partial=True)
-    array([[nan, nan, nan, nan,  3.,  7.],
-           [nan, nan,  2.,  8.,  4.,  6.],
-           [ 1.,  9.,  3.,  7.,  5.,  5.],
-           [ 2.,  8.,  4.,  6.,  1.,  9.],
-           [ 3.,  7.,  5.,  5.,  2.,  8.]])
+        >>> X = np.array([1., 2., 3., 4., 5.])
+        >>> hankel(X, 3)
+        array([[1., 1., 1.],
+            [1., 1., 2.],
+            [1., 2., 3.],
+            [2., 3., 4.],
+            [3., 4., 5.]])
+        >>> hankel(X, 3, return_partial=False)
+        array([[1., 2., 3.],
+            [2., 3., 4.],
+            [3., 4., 5.]])
+        >>> X = np.array([[1., 2., 3., 4., 5.], [9., 8., 7., 6., 5.]]).T
+        >>> hankel(X, 3, return_partial=True)
+        array([[nan, nan, nan, nan,  1.,  9.],
+            [nan, nan,  1.,  9.,  2.,  8.],
+            [ 1.,  9.,  2.,  8.,  3.,  7.],
+            [ 2.,  8.,  3.,  7.,  4.,  6.],
+            [ 3.,  7.,  4.,  6.,  5.,  5.]])
+        >>> X = np.array([[1.0, 2.0, 3.0, 4.0, 5.0], [9.0, 8.0, 7.0, 6.0, 5.0]]).T
+        >>> hankel(X, 3, 2, return_partial=True)
+        array([[nan, nan, nan, nan,  3.,  7.],
+            [nan, nan,  2.,  8.,  4.,  6.],
+            [ 1.,  9.,  3.,  7.,  5.,  5.],
+            [ 2.,  8.,  4.,  6.,  1.,  9.],
+            [ 3.,  7.,  5.,  5.,  2.,  8.]])
     """
     if hn <= 1:
         return X
