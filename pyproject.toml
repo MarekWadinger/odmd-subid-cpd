@@ -14,6 +14,13 @@ dependencies = [
     "tqdm>=4.67.1",
 ]
 
+[project.optional-dependencies]
+examples = [
+    "bayesian-optimization~=1.4.3",
+    "jupyter~=1.0.0",
+    "notebook~=7.1.2",
+]
+
 [tool.pytest.ini_options]
 addopts = [
     "--doctest-modules",
@@ -128,9 +135,4 @@ docs = [
     "mkdocs-material<10.0.0",
     "mkdocs-section-index>=0.3.10",
     "mkdocstrings-python<2.0.0",
-]
-examples = [
-    "bayesian-optimization~=1.4.3",
-    "jupyter~=1.0.0",
-    "notebook~=7.1.2",
 ]

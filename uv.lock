@@ -1640,6 +1640,13 @@ dependencies = [
     { name = "tqdm" },
 ]
 
+[package.optional-dependencies]
+examples = [
+    { name = "bayesian-optimization" },
+    { name = "jupyter" },
+    { name = "notebook" },
+]
+
 [package.dev-dependencies]
 app = [
     { name = "matplotlib" },
@@ -1686,15 +1693,13 @@ docs = [
     { name = "mkdocs-section-index" },
     { name = "mkdocstrings-python" },
 ]
-examples = [
-    { name = "bayesian-optimization" },
-    { name = "jupyter" },
-    { name = "notebook" },
-]
 
 [package.metadata]
 requires-dist = [
+    { name = "bayesian-optimization", marker = "extra == 'examples'", specifier = "~=1.4.3" },
+    { name = "jupyter", marker = "extra == 'examples'", specifier = "~=1.0.0" },
     { name = "matplotlib", specifier = "<4.0.0" },
+    { name = "notebook", marker = "extra == 'examples'", specifier = "~=7.1.2" },
     { name = "numpy", specifier = "<3.0.0" },
     { name = "pandas", specifier = "<3.0.0" },
     { name = "requests", specifier = ">=2.32.4" },
@@ -1702,6 +1707,7 @@ requires-dist = [
     { name = "scipy", specifier = "<2.0.0" },
     { name = "tqdm", specifier = ">=4.67.1" },
 ]
+provides-extras = ["examples"]
 
 [package.metadata.requires-dev]
 app = [
@@ -1748,11 +1754,6 @@ docs = [
     { name = "mkdocs-material", specifier = "<10.0.0" },
     { name = "mkdocs-section-index", specifier = ">=0.3.10" },
     { name = "mkdocstrings-python", specifier = "<2.0.0" },
-]
-examples = [
-    { name = "bayesian-optimization", specifier = "~=1.4.3" },
-    { name = "jupyter", specifier = "~=1.0.0" },
-    { name = "notebook", specifier = "~=7.1.2" },
 ]
 
 [[package]]
