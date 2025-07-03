@@ -6,11 +6,10 @@ on:
     branches: [main]
     types:
       - completed
-    conclusion: success
 
 jobs:
   bump-version:
-    if: "!startsWith(github.event.head_commit.message, 'bump:')"
+    if: "!startsWith(github.event.head_commit.message, 'bump:') && ${{ github.event.workflow_run.conclusion == 'success' }}"
     runs-on: ubuntu-latest
     permissions:
       contents: write
