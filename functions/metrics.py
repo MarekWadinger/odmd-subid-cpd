@@ -1,6 +1,4 @@
-"""
-This module is modified part of evaluation from library [tsad](https://github.com/waico/tsad)
-"""
+"""This module is modified part of evaluation from library [tsad](https://github.com/waico/tsad)"""
 
 from typing import Any
 
@@ -9,8 +7,7 @@ import pandas as pd
 
 
 def filter_detecting_boundaries(detecting_boundaries):
-    """
-    Filters out empty sublists from a list of detecting boundaries.
+    """Filters out empty sublists from a list of detecting boundaries.
 
     Args:
         detecting_boundaries (list of list): A list containing sublists,
@@ -43,10 +40,7 @@ def single_detecting_boundaries(
     anomaly_window_destination,
     intersection_mode,
 ):
-    """
-    Extract detecting_boundaries from series or list of timestamps
-    """
-
+    """Extract detecting_boundaries from series or list of timestamps"""
     if (true_series is not None) and (true_list_ts is not None):
         raise Exception("Choose the ONE type")
     elif true_series is not None:
@@ -116,8 +110,7 @@ def single_detecting_boundaries(
 
 
 def check_errors(my_list):
-    """
-    Check format of input true data.
+    """Check format of input true data.
 
     Args:
         my_list (list): Uniform format of true data (See evaluate.evaluate).
@@ -177,8 +170,7 @@ def check_errors(my_list):
 def extract_cp_confusion_matrix(
     detecting_boundaries, prediction, point=0, binary=False
 ):
-    """
-    Extracts the confusion matrix for change point detection.
+    """Extracts the confusion matrix for change point detection.
 
     Args:
         detecting_boundaries (list of list of int): List of pairs of start and end times for detecting boundaries.
@@ -283,9 +275,7 @@ def single_average_delay(
     anomaly_window_destination,
     clear_anomalies_mode,
 ):
-    """
-    anomaly_window_destination: 'lefter', 'righter', 'center'. Default='right'
-    """
+    """anomaly_window_destination: 'lefter', 'righter', 'center'. Default='right'"""
     detecting_boundaries = filter_detecting_boundaries(detecting_boundaries)
     point = 0 if clear_anomalies_mode else -1
     dict_cp_confusion = extract_cp_confusion_matrix(
@@ -337,9 +327,7 @@ def my_scale(
     clear_anomalies_mode=True,
     plot_figure=False,
 ):
-    """
-    ts - segment on which the window is applied
-    """
+    """Ts - segment on which the window is applied"""
     x = np.linspace(-np.pi / 2, np.pi / 2, detalization)
     x = x if clear_anomalies_mode else x[::-1]
     y = (
@@ -373,8 +361,7 @@ def single_evaluate_nab(
     scale_func="improved",
     scale_koef=1,
 ) -> np.ndarray:
-    """
-    Evaluate the NAB (Numenta Anomaly Benchmark) score for a given set of predictions.
+    """Evaluate the NAB (Numenta Anomaly Benchmark) score for a given set of predictions.
 
     Args:
         detecting_boundaries (list of list of two float values):
@@ -467,8 +454,7 @@ def chp_score(
     scale_koef=1,
     verbose=False,
 ):
-    """
-    Calculates various metrics for evaluating anomaly or changepoint detection.
+    """Calculate various metrics for evaluating anomaly or changepoint detection.
 
     Args:
         true (pd.Series or list): True labels of anomalies or changepoints.
@@ -581,7 +567,6 @@ def chp_score(
         === NAB ===
         {'Standard': 100.0, 'LowFP': 100.0, 'LowFN': 100.0}
     """
-
     assert isinstance(true, pd.Series) or isinstance(true, list)
     # checking prediction
     if isinstance(prediction, pd.Series):
@@ -679,11 +664,13 @@ def chp_score(
         results = {}
         desc = ["Standard", "LowFP", "LowFN"]
         for t, profile_name in enumerate(desc):
-            results[profile_name] = round(
-                100
-                * (matrix[0, t] - matrix[1, t])
-                / (matrix[2, t] - matrix[1, t]),
-                2,
+            results[profile_name] = float(
+                round(
+                    100
+                    * (matrix[0, t] - matrix[1, t])
+                    / (matrix[2, t] - matrix[1, t]),
+                    2,
+                )
             )
             if verbose:
                 print(profile_name, " - ", results[profile_name])
@@ -708,6 +695,7 @@ def chp_score(
                 all_true_anom + all_true_anom_,
             )
         add = np.mean(detectHistory)
+        add = float(add) if isinstance(add, np.floating) else add
         if verbose:
             print("Amount of true anomalies", all_true_anom)
             print(f"A number of missed CPs = {missing}")
@@ -741,9 +729,9 @@ def chp_score(
                 TN += len(prediction[i]) - TP - FP - FN
 
         if metric == "binary":
-            f1 = round(TP / (TP + (FN + FP) / 2), 2)
-            far = round(FP / (FP + TN) * 100, 2)
-            mar = round(FN / (FN + TP) * 100, 2)
+            f1 = float(round(TP / (TP + (FN + FP) / 2), 2))
+            far = float(round(FP / (FP + TN) * 100, 2))
+            mar = float(round(FN / (FN + TP) * 100, 2))
             if verbose:
                 print(f"False Alarm Rate {far} %")
                 print(f"Missing Alarm Rate {mar} %")

@@ -32,7 +32,6 @@ def separate_args_kwargs(list_of_tuples):
         0  5  6
         1  7  8})
     """
-
     args_: list[Any] = []
     kwargs_: dict[str | int, Any] = {}
     args_types = []
@@ -105,13 +104,13 @@ class Rolling(R):
         >>> svd.update_many(x=X)
         >>> svd.n_seen == rsvd.n_seen
         True
-        >>> np.abs(svd.transform_one(x)[0]) == np.abs(rsvd.transform_one(x)[0])
+        >>> np.allclose(np.abs(svd.transform_one(x)[0]), np.abs(rsvd.transform_one(x)[0]))
         True
         >>> X = pd.DataFrame(np.linalg.qr(np.random.randn(2, m))[0])
         >>> for x in X.to_dict(orient='records'):
         ...     rsvd.update(x=x)
         >>> svd.update_many(x=X)
-        >>> np.abs(svd.transform_one(x)[0]) == np.abs(rsvd.transform_one(x)[0])
+        >>> np.allclose(np.abs(svd.transform_one(x)[0]), np.abs(rsvd.transform_one(x)[0]))
         True
     """
 
