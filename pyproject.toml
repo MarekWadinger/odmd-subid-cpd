@@ -1,3 +1,19 @@
+[project]
+name = "odmd-subid-cpd"
+version = "1.0.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib<4.0.0",
+    "numpy<3.0.0",
+    "pandas<3.0.0",
+    "requests>=2.32.4",
+    "river",
+    "scipy<2.0.0",
+    "tqdm>=4.67.1",
+]
+
 [tool.pytest.ini_options]
 addopts = [
     "--doctest-modules",
@@ -26,8 +42,9 @@ norecursedirs = ["examples", ".*"]
 [tool.ruff]
 lint.ignore = ["E501"]
 lint.select = ["E", "F", "I", "UP"] # https://beta.ruff.rs/docs/rules/
+
 [tool.mypy]
-files = "river"
+check_untyped_defs = true
 
 [[tool.mypy.overrides]]
 module = [
@@ -61,4 +78,59 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "class .*\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
+]
+
+[tool.uv.sources]
+river = { git = "https://github.com/MarekWadinger/river.git" }
+
+[dependency-groups]
+app = [
+    "matplotlib<4.0.0",
+    "numpy<3.0.0",
+    "pandas<3.0.0",
+    "requests>=2.32.4",
+    "river",
+    "scipy<2.0.0",
+    "streamlit<2.0.0",
+]
+dev = [
+    "commitizen>=4.8.3",
+    "mypy>=1.16.1",
+    "pre-commit>=4.2.0",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "pytest-html>=4.1.1",
+    "ruff>=0.12.1",
+    "types-Markdown",
+    "types-PyYAML",
+    "types-Pygments",
+    "types-cachetools",
+    "types-colorama",
+    "types-decorator",
+    "types-defusedxml",
+    "types-jsonschema",
+    "types-pexpect",
+    "types-protobuf",
+    "types-pycurl",
+    "types-python-dateutil",
+    "types-pytz",
+    "types-tensorflow",
+    "types-toml",
+    "types-tqdm",
+]
+docs = [
+    "black<30.0.0",
+    "markdown-exec<2.0.0",
+    "mkdocs-charts-plugin>=0.0.12",
+    "mkdocs-gen-files>=0.5.0",
+    "mkdocs-include-markdown-plugin<10.0.0",
+    "mkdocs-literate-nav>=0.6.2",
+    "mkdocs-material<10.0.0",
+    "mkdocs-section-index>=0.3.10",
+    "mkdocstrings-python<2.0.0",
+]
+examples = [
+    "bayesian-optimization~=1.4.3",
+    "jupyter~=1.0.0",
+    "notebook~=7.1.2",
 ]
