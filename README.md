@@ -85,29 +85,25 @@ if you think you've spotted a bug or a performance issue.
 
 ### Installation (for Local Use)
 
-If you wish to run the platform locally, follow the steps below:
+This project depends on Rust for some dependencies. If you have Rust installed and available in your PATH, you can use `uv` for fast dependency management. Otherwise, use the Docker approach for a containerized environment.
 
-1. Clone the repository:
+#### Option 1: Local Installation with uv (requires Rust)
 
-    ```sh
-    git clone https://github.com/MarekWadinger/odmd-subid-cpd.git
-    ```
+If you have Rust installed, congratulations! You can use `uv` for faster dependency management:
 
-2. Navigate to the project folder:
+```sh
+uv sync
+```
 
-    ```sh
-    cd odmd-subid-cpd
-    ```
+#### Option 2: Devcontainer (requires VSCode)
 
-3. Create a virtual environment:
+If you have VSCode installed, you can use the devcontainer feature to create a containerized environment. Just open the project in VSCode and click on the `Reopen in Container` button.
 
-    ```sh
-    python -m venv --upgrade-deps .venv
-    source .venv/bin/activate
-    ```
+#### Option 3: Docker (recommended if Rust is not available)
 
-4. Install the required dependencies:
+If you don't have Rust installed, the Docker approach is the way to go:
 
-    ```sh
-    pip install -r requirements.txt
-    ```
+```sh
+docker build -t odmd-subid-cpd .
+docker run -p 8888:8888 -v .:/app odmd-subid-cpd
+```
