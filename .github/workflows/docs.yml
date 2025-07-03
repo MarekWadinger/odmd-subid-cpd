@@ -12,8 +12,21 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@main
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Export docs requirements
+        run: uv export --group docs --no-hashes --output-file docs/requirements.txt
+
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MKDOCS_TOKEN }}
           REQUIREMENTS: docs/requirements.txt
