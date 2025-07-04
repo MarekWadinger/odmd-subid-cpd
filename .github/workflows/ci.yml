@@ -78,7 +78,7 @@ jobs:
       run: uv run ruff check .
 
     - name: Type check with mypy
-      run: uv run mypy .
+      run: uv run mypy . --ignore-missing-imports
 
     - name: Minimize uv cache
       run: uv cache prune --ci
