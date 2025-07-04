@@ -92,12 +92,6 @@ river = { git = "https://github.com/MarekWadinger/river.git" }
 
 [dependency-groups]
 app = [
-    "matplotlib<4.0.0",
-    "numpy<3.0.0",
-    "pandas<3.0.0",
-    "requests>=2.32.4",
-    "river",
-    "scipy<2.0.0",
     "streamlit<2.0.0",
 ]
 dev = [
