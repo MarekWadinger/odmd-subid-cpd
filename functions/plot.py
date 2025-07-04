@@ -7,11 +7,25 @@ from matplotlib.axes import Axes
 
 from .preprocessing import normalize as _normalize
 
+
+def is_tex_available() -> bool:
+    """Check if LaTeX is available on the system.
+
+    Returns:
+    -------
+    bool
+        True if LaTeX is available, False otherwise.
+    """
+    import shutil
+
+    return shutil.which("latex") is not None
+
+
 plt.rcParams.update(
     {
-        "text.usetex": True,
-        "font.family": "Times New Roman",
-        "font.serif": "Times New Roman",
+        "text.usetex": is_tex_available(),
+        "font.family": "sans-serif",
+        "font.serif": "sans-serif",
         "axes.labelsize": 12,
         "axes.grid": True,
         "font.size": 12,
@@ -49,7 +63,8 @@ def set_size(
             Fraction of the height which you wish the figure to occupy
     subplots: array-like, optional
             The number of rows and columns of subplots.
-    Returns
+
+    Returns:
     -------
     fig_dim: tuple
             Dimensions of figure in inches

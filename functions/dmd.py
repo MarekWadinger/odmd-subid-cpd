@@ -6,15 +6,12 @@ and DMD with Control algorithm. It is based on the paper by Zhang et al.
 However, this implementation provides a more flexible interface aligned with
 River API covers and separates update and revert methods in Windowed DMD.
 
-TODO:
-
+Todo:
     - [ ] Align design with (n, m) convention (currently (m, n)).
 
 References:
     [^1]: Schmid, P. (2022). Dynamic Mode Decomposition and Its Variants. 54(1), pp.225-254. doi:[10.1146/annurev-fluid-030121-015835](https://doi.org/10.1146/annurev-fluid-030121-015835).
 """
-
-from typing import Union
 
 import numpy as np
 import scipy as sp
@@ -95,9 +92,8 @@ class DMD:
         # self.A = self.Phi @ np.diag(self.Lambda) @ np.linalg.pinv(self.Phi)
         self.A = Y @ v.conj().T @ np.diag(sigma_inv) @ u_.conj().T
 
-    def fit(self, X: np.ndarray, Y: Union[np.ndarray, None] = None):
-        """
-        Fit the DMD model to the input X.
+    def fit(self, X: np.ndarray, Y: np.ndarray | None = None):
+        """Fit the DMD model to the input X.
 
         Args:
             X: Input X matrix of shape (n, m), where m is the number of variables and n is the number of time steps.
@@ -122,8 +118,7 @@ class DMD:
         x: np.ndarray,
         forecast: int = 1,
     ) -> np.ndarray:
-        """
-        Predict future values using the trained DMD model.
+        """Predict future values using the trained DMD model.
 
         Args:
         x: numpy.ndarray of shape (m,)
@@ -144,7 +139,7 @@ class DMD:
 
 
 class DMDwC(DMD):
-    def __init__(self, r: int, B: Union[np.ndarray, None] = None):
+    def __init__(self, r: int, B: np.ndarray | None = None):
         super().__init__(r)
         self.B = B
         self.known_B = B is not None
@@ -153,8 +148,8 @@ class DMDwC(DMD):
     def fit(
         self,
         X: np.ndarray,
-        Y: Union[np.ndarray, None] = None,
-        U: Union[np.ndarray, None] = None,
+        Y: np.ndarray | None = None,
+        U: np.ndarray | None = None,
     ):
         if U is None:
             super().fit(X, Y)
@@ -196,10 +191,9 @@ class DMDwC(DMD):
         self,
         x: np.ndarray,
         forecast: int = 1,
-        U: Union[np.ndarray, None] = None,
+        U: np.ndarray | None = None,
     ) -> np.ndarray:
-        """
-        Predict future values using the trained DMD model.
+        """Predict future values using the trained DMD model.
 
         Args:
         - forecast: int
